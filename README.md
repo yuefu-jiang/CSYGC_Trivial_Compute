@@ -1,7 +1,7 @@
-# Vite + Svelte + Electron + Tailwind
+# CSYGC Trivial Compute
 
-## 🚀 Description
-The "Vite + Svelte + Electron + Tailwind" repository is a powerful template designed to streamline the development process of modern applications. By leveraging the combined strengths of Vite, Svelte, Electron, and Tailwind CSS, this template provides an efficient and flexible foundation for building cross-platform desktop applications with a delightful user interface.
+## Description
+This is the course project from Johns Hopkins's 601.621. The template is ported from [this repo](https://github.com/feernandobraga/vitesvelctron). 
 
 ## 🧋 Technologies
 [Vite](https://vitejs.dev/): Vite is a lightning-fast build tool for web applications. It optimizes the development experience with near-instantaneous hot module replacement (HMR) and an efficient build process.
@@ -15,16 +15,7 @@ The "Vite + Svelte + Electron + Tailwind" repository is a powerful template desi
 ## 👨‍💻 Installation and Usage
 To get started with building your app using this template, follow these simple steps (assuming you already have [Node.js](https://nodejs.org/) installed):
 
-Get a copy of this template by running the following command: 
-```bash
-npx degit feernandobraga/vitesvelctron my-app-name
-```
-Alternatively, you can clone the repo instead:
-```bash
-git clone https://github.com/feernandobraga/vitesvelctron
-```
-
-Next, cd into the project directory and install the dependencies:
+cd into the project directory and install the dependencies:
 ```bash
 cd my-app-name
 npm install
@@ -39,16 +30,3 @@ When your app is ready, you can build by running the following command:
 ```bash
 npm run make
 ```
-
-## 🍑 Donation
-If you are feeling generous or if you found this template helpful because it saved you a lot of time and headaches, you can contribute by buying me a coffee!
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-%E2%98%95%EF%B8%8F-orange)](https://www.buymeacoffee.com/feernandobraga)
-
-Thank you for considering a donation. Your support is greatly appreciated! 🧡
-
-## 🧙‍♂️ Contributing 
-Contributions are always welcome! If you find any bugs, have feature requests, or would like to contribute in any other way, please feel free to open an issue or submit a pull request.
-
-## 📝 License
-This project is licensed under the MIT License.
