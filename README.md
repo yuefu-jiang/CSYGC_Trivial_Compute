@@ -21,6 +21,13 @@ cd my-app-name
 npm install
 ```
 
+Make sure your python environment has all required packages. A virtural environment is recommended.
+
+```bash
+python3 -m venv my-environment
+source my-environment/bin/activate
+```
+
 Finally, start the development server:
 ```bash
 npm run dev

@@ -16,12 +16,12 @@ class Server:
         )  
 
     def rule(self):
-	    return jsonify(
-	        {
-	            'data': 'Message in a bottle: \nHello from Python! ',
-	        	'action': True,
-	        }
-	    )
+        return jsonify(
+            {
+                'data': 'Message in a bottle: \nHello from Python! ',
+                'action': True,
+            }
+        )
 
 
 if __name__ == "__main__":
