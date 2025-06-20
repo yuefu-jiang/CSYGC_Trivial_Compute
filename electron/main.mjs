@@ -1,8 +1,17 @@
-// Modules to control application life and create native browser window
-const { log } = require('console')
-const { app, BrowserWindow } = require('electron')
-const path = require('path')
-
+import { log } from 'console';
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell, nativeImage, session, screen } from 'electron';
+import path from 'path';
+import net from 'net';
+//import Store from 'electron-store';
+import fs from 'fs';
+//import electronLog from 'electron-log/main.js';
+import os from 'os';
+import { spawn } from 'child_process';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url); // Get the full file path
+const __dirname = path.dirname(__filename); // Extract the directory name
+const require = createRequire(import.meta.url);
 if (require('electron-squirrel-startup')) app.quit();
 
 const isDevEnvironment = process.env.DEV_ENV === 'true'
@@ -15,14 +24,51 @@ if (isDevEnvironment) {
     });
 }
 
+let serverProc = null;
+const startup = () => {
+    const srv = net.createServer();
+    srv.listen({ host: 'localhost', port: 0 }, () => {
+        process.env.port = srv.address().port;
+        srv.close();
+        startServer();
+    });
+};
+const startServer = () => {
+    if (isDevEnvironment) {
+        let serverCodeDir = path.join(__dirname, '..', 'server');
+        // spawn the python server in a virtual environment
+        serverProc = spawn('python3', [path.join(serverCodeDir, 'server.py'), process.env.port]);
+    } else {
+        // Prod environment - launch the PyInstaller compiled server
+        let serverPath = path.join(app.getAppPath(), serverCodeDir);
+        serverProc = spawn(serverPath, [process.env.port, app.getPath('logs'), app.getVersion()]);
+    }
+
+    serverProc.stdout.setEncoding('utf8');
+    serverProc.stdout.on('data', function (data) {
+        log('server-stdout: ' + data);
+    });
+
+    serverProc.stderr.setEncoding('utf8');
+    serverProc.stderr.on('data', function (data) {
+        log('server-stderr: ' + data);
+        if (data.includes('* Running on')) {
+            pythonServerReady = true;
+            // Notify the render process that the python server is ready
+            mainWindow.webContents.send('pythonServerReady', pythonServerReady);
+        }
+    });
+};
+
 let mainWindow;
+let pythonServerReady = false;
 
 const createWindow = () => {
     
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 1300,
-        height: 600,
+        height: 800,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js')
         }
@@ -48,6 +94,8 @@ const createWindow = () => {
 
         log('Electron running in prod mode: 🚀')
     }
+    startup();
+    mainWindow.webContents.send('pythonServerReady', pythonServerReady);
 }
 
 // This method will be called when Electron has finished

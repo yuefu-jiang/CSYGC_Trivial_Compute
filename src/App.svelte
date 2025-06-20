@@ -1,7 +1,35 @@
 <script>
 	import csygcLogo from "./assets/csygcLogo.png"
 	import Counter from "./lib/Counter.svelte"
+	import {writable} from 'svelte/store';
 
+	let displayResultTest;
+	let displayMsgTest;
+
+
+    async function messageFromBackEnd () {
+	   	//call backend method
+        const messageDiagogue = window.confirm(
+            `This is an example method to send message to py backend. \nTry it now?`,
+        );
+        // break if cancelled from dialog box
+        if (!messageDiagogue) return;
+	   	console.log("Backend port:", window.api.getBackendPort());
+	   	const backendPort = window.api.getBackendPort()
+        const response = await fetch(`http://127.0.0.1:${backendPort}/rule`, {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 'data': 'yo' }),
+            method: 'POST',
+        });
+        const result = await response.json();
+        displayResultTest = result.action;
+        displayMsgTest = result.data;
+        console.log(result.data)
+    };
+
+    function hideTestDiv () {
+    	displayResultTest = false;
+    }
 </script>
 
 <main class="min-h-screen bg-slate-900 text-white flex flex-col">
@@ -29,10 +57,20 @@
 			This is a template adapted from <a href="https://github.com/feernandobraga/vitesvelctron" target="_blank" style="color:green">vitesvelectron</a>.
 		</p>
 		<p class="mt-2">
-			Counter app is imported below with js from lib. Py backend is pending implementation.
+			Counter app is imported below with js from lib. This is an example of a PURE js solution.
 		</p>
 		<div>
 			<Counter />
+		</div>
+		<p class="mt-2">
+			Message button below is executed in te backend by Python. This is an example of a FLASK server solution.
+		</p>
+		<div>
+			<button on:click={messageFromBackEnd} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Send a Bottle to Backend</button>
+		</div>
+		<div style="display: {displayResultTest ? 'block' : 'none'};">
+			{displayMsgTest} &#128013
+			<button on:click={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Hide it &#x1fae0</button>
 		</div>
 	</section>
 
