@@ -7,6 +7,8 @@
 	let displayMsgTest;
 
 
+	// Sample function for sending a message to backend
+	// Async function enables the await keyword. That means that it will wait for the response rather than moving on to next line immediatly.
     async function messageFromBackEnd () {
 	   	//call backend method
         const messageDiagogue = window.confirm(
@@ -14,16 +16,28 @@
         );
         // break if cancelled from dialog box
         if (!messageDiagogue) return;
+        // equivalent to print statement
 	   	console.log("Backend port:", window.api.getBackendPort());
+
+	   	// defined in electron/preload.js. This is the port where python is running.
 	   	const backendPort = window.api.getBackendPort()
+
+	   	// demand a response from py server.
+	   	// works with Flask; it invoke the sample rule function in server.py
+	   	// send a json to backend with header, body and method
+	   	// usually the actual content passed will be in body as stringfied json
         const response = await fetch(`http://127.0.0.1:${backendPort}/rule`, {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 'data': 'yo' }),
             method: 'POST',
         });
+        // wait for result. If anything goes wrong it will fail to fetch
         const result = await response.json();
+
+        // this controls the message display down below
         displayResultTest = result.action;
         displayMsgTest = result.data;
+        // print out the response
         console.log(result.data)
     };
 
