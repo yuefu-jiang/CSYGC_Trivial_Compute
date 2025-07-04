@@ -5,7 +5,7 @@ import sys
 
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
-
+from gameinstance import GameInstance
 
 def setup_server(*args, **kwargs):
     return Server(*args, **kwargs)
@@ -39,5 +39,5 @@ if __name__ == "__main__":
     # start server
     server = Server()
     # print start up on console too
-    print(f"🚀 Starting Flask server on port {port}...")
+    print(f"Starting Flask server on port {port}...")
     server.app.run(host="127.0.0.1", port=port, debug=True)
