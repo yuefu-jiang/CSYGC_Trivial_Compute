@@ -6,7 +6,7 @@ from gamehelperfunct import destination
 from gamehelperfunct import rolldice
 
 class GameInstance:
-    def __init__(self):
+    def __init__(self, width: int, players: int, wedge: Wedge):
         """
         This class implement a game object containing all necessary instance and attributes of game
         :param width: width of the game board
@@ -15,43 +15,33 @@ class GameInstance:
         """
         self.gboard = None
         self.gameid = None
-        self.boardsize: int
-        self.playerno: int
+        self.boardsize = width
+        self.playerno = players
         self.tokenlist = []
-        self.wedgelist: Wedge
+        self.wedgelist = wedge
+        self.initialize()
 
-    def initialize(self, gameid:str, playerlist:list , q_type = 4, b_size=9):
+    def initialize(self):
         """
         game initialization
         """
-        #cleanup existing list
-        self.tokenlist.clear()
-        self.wedgelist = None
-        #get/generate a game id
-        self.gameid=gameid
-        print(f"started game with ID:{self.gameid}", flush=True)
-        #store all game paremeters
-        self.boardsize = b_size
-        self.playerno = len(playerlist)
-        print(f"Total no. of players:{self.playerno}", flush=True)
-        self.wedgelist = Wedge(q_type)
+        #generate a game id
+        self.gameid=self.genid()
         #generate the game board
         self.gboard = Trivialboard(self.boardsize)
-        self.gboard.print_b()
-        #assign color to squares
-        self.coloring()
         #add a token for all players
         i = 0
         while i < self.playerno:
             self.tokenlist.append(Token(self.wedgelist))
             i+=1
-        #initialize all tokens, store name, put all token at center
+        #assign color to squares
+        self.coloring()
+        #assign name
+        #put all token at center
         i = 0
         while i < len(self.tokenlist):
-            self.tokenlist[i].label = playerlist[i]
             self.tokenlist[i].row = self.gboard.CT[0]
             self.tokenlist[i].col = self.gboard.CT[1]
-            print(f"player {i}: name: {self.tokenlist[i].label} location: [{self.tokenlist[i].row},{self.tokenlist[i].col}]", flush=True)
             i+=1
 
     def coloring(self):
@@ -73,35 +63,15 @@ class GameInstance:
                         self.gboard.board[i][j].color = "white"
                     case "HQ":
                         self.gboard.board[i][j].color = temp_hq.pop()
-                    case "NL":
+                    case "general":
                         self.gboard.board[i][j].color = temp_square[t]
                         t = (t+1)%len(temp_square)
                 j+=1
             i+=1
 
-    def currentpos(self,name:str)->list:
-        """
-        :param name: label of player
-        :return: coordinates of the current position of the token in a list of [i,j]
-        """
-        i=0
-        while i<self.playerno:
-            if self.tokenlist[i].label == name:
-                return list[self.tokenlist[i].row, self.tokenlist[i].col]
-            i+=1
+    def genid(self)->str:
+        return time.strftime("%Y" + "%b" + "%d" + "%H" + "%M" + "%S").upper()
 
     def showdest(self, tid: int, steps:int)->list:
-        """
-        :param tid: id number of player (0/1/2....)
-        :parem steps: how many steps to take
-        """
         return destination(self.tokenlist[tid].row,self.tokenlist[tid].col,steps,self.gboard.board)
-
-    def movetoken(self, tid: int, location:list):
-        """
-        :param tid: id number of player (0/1/2....)
-        :parem location: coordinates of the destination, [i,j]
-        """
-        self.tokenlist[tid].row = location[0]
-        self.tokenlist[tid].col = location[1]
-        
+    
