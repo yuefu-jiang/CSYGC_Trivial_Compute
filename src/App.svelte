@@ -2,10 +2,13 @@
 	import csygcLogo from "./assets/csygcLogo.png"
 	import Counter from "./lib/Counter.svelte"
 	import {writable} from 'svelte/store';
+	import Dice from "./lib/Dice.svelte";
 
 	let displayResultTest;
 	let displayMsgTest;
-
+	let wheel = { x: 0, y: 0 };
+	let questionCategory = '';
+	let rolling = false;
 
 	// Sample function for sending a message to backend
 	// Async function enables the await keyword. That means that it will wait for the response rather than moving on to next line immediatly.
@@ -43,6 +46,17 @@
 
     function hideTestDiv () {
     	displayResultTest = false;
+    }
+
+    function handleDiceRolled(event) {
+      const { roll, coordinate, category } = event.detail;
+      // Animate wheel movement (simple: jump to new coordinate)
+      rolling = true;
+      setTimeout(() => {
+        wheel = { x: coordinate[0], y: coordinate[1] };
+        questionCategory = category;
+        rolling = false;
+      }, 600); // Simulate move animation
     }
 </script>
 
@@ -86,6 +100,24 @@
 			{displayMsgTest} &#128013
 			<button on:click={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Hide it &#x1fae0</button>
 		</div>
+		<div class="my-8 flex flex-col items-center">
+			<Dice on:rolled={handleDiceRolled} />
+			<div class="wheel-board mt-6">
+				<div class="board-grid">
+					{#each Array(8) as _, row}
+						<div class="board-row">
+							{#each Array(8) as _, col}
+								<div class="board-cell {wheel.x === col && wheel.y === row ? 'active' : ''}"></div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+				<div class="wheel-piece" style="left: {wheel.x * 32}px; top: {wheel.y * 32}px;"></div>
+			</div>
+			{#if questionCategory && !rolling}
+				<div class="mt-4 p-2 bg-indigo-800 rounded">Category: {questionCategory}</div>
+			{/if}
+		</div>
 	</section>
 
 	<!-- Footer -->
@@ -97,3 +129,47 @@
 		</div>
 	</footer>
 </main>
+
+<style>
+.wheel-board {
+	position: relative;
+	width: 256px;
+	height: 256px;
+	margin: 0 auto;
+	background: #222;
+	border-radius: 12px;
+	border: 2px solid #444;
+}
+.board-grid {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+}
+.board-row {
+	display: flex;
+	flex: 1;
+}
+.board-cell {
+	flex: 1;
+	height: 32px;
+	border: 1px solid #333;
+	box-sizing: border-box;
+}
+.board-cell.active {
+	background: #4f46e5;
+}
+.wheel-piece {
+	position: absolute;
+	width: 28px;
+	height: 28px;
+	background: #f59e42;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	z-index: 2;
+	transition: left 0.5s, top 0.5s;
+	pointer-events: none;
+}
+</style>

@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sys
+import random
 
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
@@ -21,6 +22,9 @@ class Server:
         self.app.add_url_rule(
             "/rule", "rule", self.rule, methods = ["POST"]
         )  
+        self.app.add_url_rule(
+            "/roll", "roll", self.roll, methods=["POST"]
+        )
 
     # an example rule method. only returns json to front.
     def rule(self):
@@ -30,6 +34,18 @@ class Server:
                 'action': True,
             }
         )
+
+    def roll(self):
+        roll_result = random.randint(1, 6)
+        # Stub: random coordinate and category
+        coordinate = [random.randint(0, 7), random.randint(0, 7)]
+        categories = ["Science", "History", "Art", "Sports", "Geography", "Entertainment"]
+        category = random.choice(categories)
+        return jsonify({
+            'roll': roll_result,
+            'coordinate': coordinate,
+            'category': category
+        })
 
 # fire up server upon init
 if __name__ == "__main__":
