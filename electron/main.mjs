@@ -78,8 +78,9 @@ const createWindow = () => {
     if (isDevEnvironment) {
 
         // if your vite app is running on a different port, change it here
-        mainWindow.loadURL('http://localhost:5173/');
-
+        setTimeout(() => {
+            mainWindow.loadURL('http://localhost:5173/');
+        }, 500);
         // Open the DevTools.
         mainWindow.webContents.on("did-frame-finish-load", () => {
             mainWindow.webContents.openDevTools();
@@ -101,13 +102,33 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.whenReady().then(() => {
+    createWindow();
 
+    ipcMain.on('open-game-session', (event, sessionID) => {
+        createGameSessionWindow(sessionID);
+    });
+});
 app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
+
+function createGameSessionWindow(sessionID) {
+    const gameWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+    });
+
+
+    const url = `http://localhost:5173/#/game-session?id=${sessionID}`;
+    gameWindow.loadURL(url);
+}
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
