@@ -5,7 +5,23 @@
 
 	let displayResultTest;
 	let displayMsgTest;
+	
+	let category ='science';
+	let qid = 'Q00001'
+	let question;
 
+	// function for fetching question from backend
+	async function fetchQuestion() {
+		console.log("Is Electron?", !!window.api);
+		console.log("Location:", window.location.href);
+		const backendPort = window.api.getBackendPort()
+		const response = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`, {
+			headers: { 'Content-Type': 'application/json' },
+            method: 'GET',
+		});
+		const result = await response.json();
+		console.log(result.data)
+	}
 
 	// Sample function for sending a message to backend
 	// Async function enables the await keyword. That means that it will wait for the response rather than moving on to next line immediatly.
@@ -81,6 +97,9 @@
 		</p>
 		<div>
 			<button on:click={messageFromBackEnd} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Send a Bottle to Backend</button>
+		</div>
+		<div>
+			<button on:click={fetchQuestion} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Fetch Question &#x1fae0</button>
 		</div>
 		<div style="display: {displayResultTest ? 'block' : 'none'};">
 			{displayMsgTest} &#128013
