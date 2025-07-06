@@ -86,5 +86,5 @@
     "Q00078": { "question": "Which US state has the Grand Canyon?", "answer": "Arizona", "used": false },
     "Q00079": { "question": "What is the smallest country in the world?", "answer": "Vatican City", "used": false },
     "Q00080": { "question": "Which country has the most islands?", "answer": "Sweden", "used": false }
-  },
+  }
 }

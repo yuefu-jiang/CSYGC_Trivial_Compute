@@ -95,7 +95,7 @@
 			<div>
 				<button on:click={newGameSession} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">New game</button>
 			</div>
-
+		</section>
 
 		<!-- Footer -->
 		<footer class="bg-gray-950 fixed bottom-0 left-0 w-full py-2">
