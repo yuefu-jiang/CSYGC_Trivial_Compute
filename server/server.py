@@ -5,12 +5,9 @@ import sys
 import os
 import logging
 import json
-import random
 
-from gameinstance import GameInstance
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
-gameSession = {}
 
 QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
 
@@ -32,19 +29,6 @@ class Server:
         self.app.add_url_rule(
             "/question", "get_question", self.get_question, methods=["GET"]
         )
-
-        self.app.add_url_rule(
-            "/init_questions", "init_questions", self.return_all_questions, methods=["POST"]
-        )
-
-        self.app.add_url_rule(
-            "/initializegametest", "initializegametest", self.initializegametest, methods=["POST"]
-        )
-
-        self.app.add_url_rule(
-            "/roll", "roll", self.roll, methods=["POST"]
-        )
-
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -63,43 +47,11 @@ class Server:
             }
         )
     
-    def roll(self):
-        roll_result = random.randint(1, 6)
-        # Stub: random coordinate and category
-        coordinate = [random.randint(0, 7), random.randint(0, 7)]
-        categories = ["Science", "History", "Art", "Sports", "Geography", "Entertainment"]
-        category = random.choice(categories)
-        return jsonify({
-            'roll': roll_result,
-            'coordinate': coordinate,
-            'category': category
-        })
-    
-
-    def initializegametest(self):
-        content = request.get_json()
-        gameid = content.get('gameid')
-        namelist = content.get('namelist',[])
-        q_type = content.get('q_type')
-        b_size = content.get('b_size')
-        self.app.logger.info(content)
-        newgame=GameInstance()
-        newgame.initialize(gameid,namelist)
-        gameSession.update({gameid:newgame})
-        print(gameSession, flush=True)
-        return jsonify(
-            {
-                'list': [0,1],
-                'data': 'game initialize success',
-            }
-        )    
-
-    
     def return_question(self, category, qid, mark_used=False):
         try:
             with open(QUESTION_FILE, 'r') as f:
                 data = json.load(f)
-            self.app.logger.info('Loaded questions.')
+            self.app.logger.info(data)
             question_data = data.get(category, {}).get(qid, None)
             if question_data is None:
                 return None
@@ -109,6 +61,7 @@ class Server:
                 data[category][qid]['used'] = True
                 with open(QUESTION_FILE, 'w') as f:
                     json.dump(data, f, indent=2)
+
             return question_data
 
         except Exception as e:
@@ -125,34 +78,10 @@ class Server:
         question = self.return_question(category, qid, mark_used=False)  # set to True if write enabled
 
         if question:
-            self.app.logger.info(f'Returned QID #{qid} to frontend.')
             return jsonify({'category': category, 'qid': qid, 'data': question})
         else:
             return jsonify({'error': 'Question not found'}), 404
 
-    def return_all_questions(self):
-        try:
-            with open(QUESTION_FILE, 'r') as f:
-                data = json.load(f)
-
-            self.app.logger.info('Started Game server and loaded question database.')
-            aq_dict = {}
-            for cat in data.keys():
-                aq_dict[cat] = list(data[cat].keys())
-                self.app.logger.info(data[cat].keys())
-
-            self.app.logger.info(aq_dict)
-
-            return jsonify(
-                {
-                    'data': aq_dict,
-                }
-            )
-
-        except Exception as e:
-            print(f"Error reading questions file: {e}")
-            return None
-          
 # fire up server upon init
 if __name__ == "__main__":
     # Get the port number passed from Electron
@@ -161,5 +90,5 @@ if __name__ == "__main__":
     # start server
     server = Server()
     # print start up on console too
-    print(f"Starting Flask server on port {port}...")
+    print(f"🚀 Starting Flask server on port {port}...")
     server.app.run(host="127.0.0.1", port=port, debug=True)
