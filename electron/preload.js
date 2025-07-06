@@ -21,7 +21,8 @@ console.log('Port: ' + process.env.port);
 contextBridge.exposeInMainWorld('port', process.env.port);
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    openGameSession: (sessionID) => ipcRenderer.send('open-game-session', sessionID),
     onPythonServerReady: (callback) => ipcRenderer.on('pythonServerReady', (_event, value) => callback(value))
 });
 
-console.log(contextBridge)
+console.log('Starting Trivial Compute')
