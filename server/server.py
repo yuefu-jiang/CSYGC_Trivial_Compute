@@ -39,5 +39,5 @@ if __name__ == "__main__":
     # start server
     server = Server()
     # print start up on console too
-    print(f"🚀 Starting Flask server on port {port}...")
+    print(f"Starting Flask server on port {port}...")
     server.app.run(host="127.0.0.1", port=port, debug=True)
