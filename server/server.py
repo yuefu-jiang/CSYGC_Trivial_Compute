@@ -107,7 +107,7 @@ class Server:
         except Exception as e:
             print(f"Error reading questions file: {e}")
             return None
-
+          
 # fire up server upon init
 if __name__ == "__main__":
     # Get the port number passed from Electron
