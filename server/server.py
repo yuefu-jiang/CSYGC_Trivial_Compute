@@ -29,6 +29,10 @@ class Server:
         self.app.add_url_rule(
             "/question", "get_question", self.get_question, methods=["GET"]
         )
+
+        self.app.add_url_rule(
+            "/init_questions", "init_questions", self.return_all_questions, methods=["POST"]
+        )
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -82,6 +86,28 @@ class Server:
         else:
             return jsonify({'error': 'Question not found'}), 404
 
+    def return_all_questions(self):
+        try:
+            with open(QUESTION_FILE, 'r') as f:
+                data = json.load(f)
+            print(data)
+            aq_dict = {}
+            for cat in data.keys():
+                aq_dict[cat] = list(data[cat].keys())
+                self.app.logger.info(data[cat].keys())
+
+            self.app.logger.info(aq_dict)
+
+            return jsonify(
+                {
+                    'data': aq_dict,
+                }
+            )
+
+        except Exception as e:
+            print(f"Error reading questions file: {e}")
+            return None
+          
 # fire up server upon init
 if __name__ == "__main__":
     # Get the port number passed from Electron
