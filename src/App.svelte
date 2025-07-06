@@ -50,7 +50,7 @@
         // wait for result. If anything goes wrong it will fail to fetch
         const result = await response.json();
 		const initData = result.data;
-		console.log(initData)
+		//console.log(initData)
 		const newSessionID = generateUniqueID(activeSession);
 		sessionID = newSessionID;
 
@@ -59,10 +59,10 @@
 				...store,
 				[newSessionID]: initData
 			};
-			console.log('Updating session store:', updated);
+			//console.log('Updating session store:', updated);
 			return updated;
 		});
-		console.log(currentRoute)
+		console.log('Started new session: ', newSessionID)
 		window.electronAPI.openGameSession(newSessionID);
 
 	}
