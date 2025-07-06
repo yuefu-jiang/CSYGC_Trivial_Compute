@@ -55,7 +55,7 @@ class Server:
         try:
             with open(QUESTION_FILE, 'r') as f:
                 data = json.load(f)
-            self.app.logger.info(data)
+            self.app.logger.info('Loaded questions.')
             question_data = data.get(category, {}).get(qid, None)
             if question_data is None:
                 return None
@@ -82,6 +82,7 @@ class Server:
         question = self.return_question(category, qid, mark_used=False)  # set to True if write enabled
 
         if question:
+            self.app.logger.info(f'Returned QID #{qid} to frontend.')
             return jsonify({'category': category, 'qid': qid, 'data': question})
         else:
             return jsonify({'error': 'Question not found'}), 404
@@ -90,7 +91,8 @@ class Server:
         try:
             with open(QUESTION_FILE, 'r') as f:
                 data = json.load(f)
-            print(data)
+
+            self.app.logger.info('Started Game server and loaded question database.')
             aq_dict = {}
             for cat in data.keys():
                 aq_dict[cat] = list(data[cat].keys())
