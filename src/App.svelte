@@ -2,10 +2,18 @@
 	import csygcLogo from "./assets/csygcLogo.png"
 	import Counter from "./lib/Counter.svelte"
 	import {writable} from 'svelte/store';
-
+	import NewGameSignInPage from "./lib/NewGameSignInPage.svelte";
 	let displayResultTest;
 	let displayMsgTest;
+	let displayNewGamePage = false;
 
+	function openNewGamePage() {
+		displayNewGamePage = true;
+	};
+
+	function closeNewGamePage() {
+		displayNewGamePage = false;
+	};
 
 	// Sample function for sending a message to backend
 	// Async function enables the await keyword. That means that it will wait for the response rather than moving on to next line immediatly.
@@ -46,6 +54,10 @@
     }
 </script>
 
+
+{#if displayNewGamePage}
+<NewGameSignInPage closePage={closeNewGamePage}/>
+{:else}
 <main class="min-h-screen bg-slate-900 text-white flex flex-col">
 	<!-- Top Part -->
 	<section class="flex justify-center items-center h-72">
@@ -80,13 +92,18 @@
 			Message button below is executed in te backend by Python. This is an example of a FLASK server solution.
 		</p>
 		<div>
-			<button on:click={messageFromBackEnd} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Send a Bottle to Backend</button>
+			<button onclick={messageFromBackEnd} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Send a Bottle to Backend</button>
 		</div>
 		<div style="display: {displayResultTest ? 'block' : 'none'};">
 			{displayMsgTest} &#128013
-			<button on:click={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Hide it &#x1fae0</button>
+			<button onclick={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Hide it &#x1fae0</button>
+		</div>
+		<div>
+			<button onclick={openNewGamePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start New Game</button>
 		</div>
 	</section>
+
+	<div class="mb-10"></div>
 
 	<!-- Footer -->
 	<footer class="bg-gray-950 fixed bottom-0 left-0 w-full py-2">
@@ -97,3 +114,4 @@
 		</div>
 	</footer>
 </main>
+{/if}
