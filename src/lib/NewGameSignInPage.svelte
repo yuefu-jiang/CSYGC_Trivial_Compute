@@ -26,6 +26,7 @@
     function allowOnlyLetters(event, index) {
         const cleaned = event.target.value.replace(/[^a-zA-Z\s]/g, '');
         playerNames[index] = cleaned;
+        playerNames = [...playerNames];
         validateNames();        
     }
 
@@ -77,6 +78,7 @@
                 {#each Array(numberOfPlayers) as _, num}
                     <div class="flex flex-col gap-4 w-full max-w-md m-2">
                         <input
+                            bind:value={playerNames[num]}
                             oninput={(e) => allowOnlyLetters(e, num)}
                             placeholder="Player {num + 1}"
                             class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
