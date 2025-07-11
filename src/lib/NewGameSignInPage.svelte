@@ -1,25 +1,41 @@
 <script>
 	import csygcLogo from "../assets/csygcLogo.png"
-    import Chip, { Set, Text } from '@smui/chips';
+    import Chip, { Text } from '@smui/chips';
     import Button, { Label } from '@smui/button';
+    import Select, { Option } from '@smui/select';
     import Textfield from '@smui/textfield';
 
     let { closePage } = $props();
+    
+    const NUMBER_OF_CATEGORIES = 4;
 
-    let choices = [1, 2, 3, 4];
+    let choices = [2, 3, 4];
     let numberOfPlayers = $state(0);
-    let valid_names = $state(false);
+    let validNames = $state(false);
     let playerNames = $state([]);
+
+    let validCategories = $state(false);
+    let categoryOptions = new Set([
+        "Geography",
+        "History",
+        "Math",
+        "Computer Science",
+        "Spanish",
+        "English",
+        "Physics",
+    ]);
+    // let selectedCategories = new Set([]);
+    let selectedCategoriesList = $state(Array(NUMBER_OF_CATEGORIES).fill(''));
 
     function validateNames() {
         for (let i = 0; i < numberOfPlayers; i++) {
             const name = playerNames[i];
             console.log(`name: ${name}`);
             if (name === '' || name === undefined) {
-                valid_names = false;
+                validNames = false;
                 break;
             }
-            valid_names = true;
+            validNames = true;
         }
     }
 
@@ -32,12 +48,12 @@
 
     function updateNumberOfPlayers(num) {
         numberOfPlayers = num;
-        let size_diff = Math.abs(numberOfPlayers - playerNames.length);
+        let sizeDiff = Math.abs(numberOfPlayers - playerNames.length);
         let AddMorePlayers = numberOfPlayers > playerNames.length;
         let oldPlayerNames = playerNames;
-        for (let i = 0; i < size_diff; i++) {
+        for (let i = 0; i < sizeDiff; i++) {
             if (AddMorePlayers) {
-                valid_names = false;
+                validNames = false;
                 oldPlayerNames.push('');
                 continue;
             }
@@ -47,6 +63,18 @@
         validateNames();
     }
 
+    function validateCategorySelection() {
+        for (let i = 0; i < NUMBER_OF_CATEGORIES; i++) {
+            if (selectedCategoriesList[i] === "") {
+                validCategories = false;
+                return;
+            }
+        }
+
+        validCategories = true;
+        return;
+    }
+
 </script>
 
 <main class="min-h-screen bg-slate-900 text-white flex flex-col">
@@ -54,7 +82,7 @@
         <!-- Choose Number of Players -->
         <section class="flex flex-col items-center justify-center mt-6">
             <h1 class="text-4xl font-bold">Trivial Compute!</h1>
-            <h3 style="margin-top: 1em;">How many players?</h3>
+            <h2 style="margin-top: 1em;">How many players?</h2>
             <div class="flex gap-4 mt-4">
                 {#each choices as num}
                 <Button
@@ -73,8 +101,9 @@
         </section>
 
         <!-- Player Names -->
-        {#if playerNames !== 0}
+        {#if numberOfPlayers !== 0}
             <section class="flex flex-col items-center justify-center mt-6">
+                <h2 style="margin-top: 1em;">Enter your names!</h2>
                 {#each Array(numberOfPlayers) as _, num}
                     <div class="flex flex-col gap-4 w-full max-w-md m-2">
                         <input
@@ -87,10 +116,39 @@
                 {/each}
             </section>
         {/if}
-    
+
+        <!-- Choose Categories -->
+        {#if validNames && numberOfPlayers !== 0}
+        <section class="flex flex-col items-center gap-6 mt-6 px-4">
+            <h2 style="margin-top: 1em;">Pick your game categories!</h2>
+            {#each Array(NUMBER_OF_CATEGORIES) as _, num}
+                {#if num === 0 || selectedCategoriesList[num - 1] !== "" }
+                    <div class="w-full max-w-md">
+                        <select
+                            class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
+                            bind:value={selectedCategoriesList[num]}
+                            onchange={() => { validateCategorySelection(); } }
+                            >
+                            <!-- <Option value={undefined}>Select category</Option> -->
+                            {#each categoryOptions as category}
+                                <option
+                                value={category}
+                                disabled={selectedCategoriesList.includes(category) && selectedCategoriesList[num] !== category}
+                                >
+                                {category}
+                                </option>
+                            {/each}
+                        </select>
+                    </div>
+                {/if}
+            {/each}
+          </section>
+        {/if}
+
 
         <!-- Start Button -->
-        {#if valid_names && numberOfPlayers !== 0}
+        {#if validCategories}
             <section class="flex flex-col items-center justify-center mt-6">
                 <div>
                     <button onclick={closePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start Game</button>
@@ -99,3 +157,69 @@
         {/if}
     </div>
 </main>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700&display=swap');
+  
+    body, main, input, select, button, label {
+      font-family: 'Poppins', sans-serif;
+    }
+  
+    h1, h2, h3 {
+      font-family: 'Fredoka One', cursive;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+      margin: 0.4rem 0;
+    }
+  
+    h1 {
+      font-size: 2.2rem;
+      color: #FF5C5C;
+      animation: bounce 1.6s infinite;
+    }
+  
+    h2 {
+      font-size: 1.25rem;
+      color: #F9A825;
+      text-align: center;
+    }
+  
+    select, input {
+      background-color: #1E293B;
+      border: 2px solid #3B82F6;
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.4rem;
+      width: 100%;
+      font-size: 0.95rem;
+      transition: border-color 0.3s ease;
+    }
+  
+    input:focus, select:focus {
+      outline: none;
+      border-color: #FBBF24;
+    }
+  
+    button {
+      cursor: pointer;
+      border-radius: 0.6rem;
+      font-weight: 600;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      font-size: 0.95rem;
+    }
+  
+    .gradient-btn {
+      background: linear-gradient(45deg, #FF416C, #FF4B2B);
+      color: white;
+    }
+  
+    .gradient-btn:hover {
+      background: linear-gradient(45deg, #FF4B2B, #FF416C);
+      box-shadow: 0 8px 16px rgba(255, 92, 92, 0.5);
+    }
+  
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+  </style>
+  
