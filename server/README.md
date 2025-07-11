@@ -28,12 +28,12 @@ Implemented class and their attributesfor now:
 
 Wedge: This class implement a list of wedge, type of wedges are hard coded to 7 colors "red", "blue", "yellow", "green", "orange", "purple", "teal"
 
-        chosen = chosen set
+        chosen = chosen {set}
         size = number of colors used
 
 Token: This class implement a token object, attributes:
 
-       label = For storing name
+        label = For storing name
         row = row number on the game board
         col = column number on the game board
         missing = Set of wedges pending collection
@@ -46,18 +46,24 @@ Token: This class implement a token object, attributes:
 Square: This class implement a square on a grid
 
         valid:True or False, for whether it is a legitiamte square
-        cat:Type of squares:CT for center,HQ for headquarter,RA for roll again, general for other colored squares, invalid for valid=false
+        cat:Type of squares: "CT" for center, "HQ" for headquarter, "RA" for roll again, "NL" for other colored squares, "IV" for valid=false
         color:color of the square, to be assigned by gameinstance
 
 Trivialboard: This class implement a square gameboard represented in a n*n matrix, or a 2D-array
 
         CT = the Center of the gameboard
         board = the gameboard itself, in a 2D-array
-            |0  |1  |...|n-1|
-        |0  |
-        |1  |
-        |...|
-        |n-1|
+        which looks like:
+        [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [HQ][NL][NL][NL][CT][NL][NL][NL][HQ]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+        [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
+
 
 GameInstance: This class implement a game object containing all necessary instance and attributes of game
 
