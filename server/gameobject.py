@@ -71,13 +71,27 @@ class Trivialboard:
                     #roll again
                     elif (col + row) % (size - 1) == 0 and row != mid:
                         temp[row].append(Square(True, "RA"))
-                    #general
+                    #normal
                     else:
-                        temp[row].append(Square(True, "general"))
+                        temp[row].append(Square(True, "NL"))
                 else:
                     #invalid squares
-                    temp[row].append(Square(False,"invalid"))
+                    temp[row].append(Square(False,"IV"))
                 col += 1
             row += 1
         return temp
+    
+    def print_b(self):
+        i = 0
+        j = 0
+        while i < len(self.board):
+            while j < len(self.board[i]):
+                if self.board[i][j].valid:
+                    print(f"[{self.board[i][j].cat}]", end="", flush=True)
+                else:
+                    print(f"[  ]", end="", flush=True)
+                j += 1
+            j=0
+            print()
+            i += 1
     

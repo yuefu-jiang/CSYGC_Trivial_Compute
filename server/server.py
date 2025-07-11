@@ -5,9 +5,10 @@ import sys
 import os
 import logging
 import json
-
+from gameinstance import GameInstance
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
+Game1 = GameInstance()
 
 QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
 
@@ -33,6 +34,11 @@ class Server:
         self.app.add_url_rule(
             "/init_questions", "init_questions", self.return_all_questions, methods=["POST"]
         )
+
+        self.app.add_url_rule(
+            "/initializegametest", "initializegametest", self.initializegametest, methods=["POST"]
+        )
+
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -51,6 +57,22 @@ class Server:
             }
         )
     
+    def initializegametest(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        namelist = content.get('namelist',[])
+        q_type = content.get('q_type')
+        b_size = content.get('b_size')
+        self.app.logger.info(content)
+        Game1.initialize(gameid,namelist)
+        return jsonify(
+            {
+                'list': [0,1],
+                'data': 'game initialize success',
+            }
+        )    
+
+    
     def return_question(self, category, qid, mark_used=False):
         try:
             with open(QUESTION_FILE, 'r') as f:
@@ -65,7 +87,6 @@ class Server:
                 data[category][qid]['used'] = True
                 with open(QUESTION_FILE, 'w') as f:
                     json.dump(data, f, indent=2)
-
             return question_data
 
         except Exception as e:
