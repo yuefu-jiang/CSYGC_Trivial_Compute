@@ -78,4 +78,17 @@ class GameInstance:
             i+=1
 
     def showdest(self, tid: int, steps:int)->list:
+        """
+        :param tid: id number of player (0/1/2....)
+        :parem steps: how many steps to take
+        """
         return destination(self.tokenlist[tid].row,self.tokenlist[tid].col,steps,self.gboard.board)
+
+    def movetoken(self, tid: int, location:list):
+        """
+        :param tid: id number of player (0/1/2....)
+        :parem location: coordinates of the destination, [i,j]
+        """
+        self.tokenlist[tid].row = location[0]
+        self.tokenlist[tid].col = location[1]
+        
