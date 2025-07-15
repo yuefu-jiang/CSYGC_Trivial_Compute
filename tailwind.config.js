@@ -5,8 +5,14 @@ export default {
         "./src/**/*.{html,svelte,js,ts,}",
         "./electron/**/*.{html,svelte,js,ts,}"
     ],
+
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                fredoka: ['"Fredoka One"', 'cursive'],
+                poppins: ['Poppins', 'sans-serif']
+            }
+        },
     },
     plugins: [],
 }

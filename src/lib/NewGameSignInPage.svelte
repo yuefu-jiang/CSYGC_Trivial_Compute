@@ -7,11 +7,14 @@
 
     import { activeqID } from '../session_store.js'
     import { activeSession } from '../session_store.js'
+    import { sessionID } from '../session_store.js';
+
     let { closePage } = $props();
     
     const NUMBER_OF_CATEGORIES = 4;
 
-    let sessionID = '';
+    //let sessionID;
+    //$: sessionID = queryParams.get('id');
 
     let choices = [2, 3, 4];
     let numberOfPlayers = $state(0);
@@ -33,15 +36,6 @@
 
     let currentRoute = window.location.hash || '#/';
     let queryParams = new URLSearchParams();
-
-
-
-    const updateRoute = () => {
-        const [path, query] = window.location.hash.split('?');
-        currentRoute = path || '#/';
-        queryParams = new URLSearchParams(query);
-    };
-
 
 
     function validateNames() {
@@ -121,7 +115,7 @@
         const initData = result.data;
         //console.log(initData)
         const newSessionID = generateUniqueID(activeSession);
-        sessionID = newSessionID;
+        sessionID.set(newSessionID);
 
         activeSession.update(store => {
         const updated = {
@@ -130,6 +124,7 @@
             };
             //console.log('Updating session store:', updated);
             return updated;
+
         });
         console.log('Started new session: ', newSessionID)
         window.electronAPI.openGameSession(newSessionID);
@@ -220,37 +215,13 @@
         </div>
     </main>
 {:else if currentRoute === '#/game-session'}
-    <GameSession  sessionID={sessionID} />
+    <GameSession  sessionID={$sessionID} />
 
 {:else}
     <p>404 - Page not found</p>
 {/if}
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700&display=swap');
-  
-    body, main, input, select, button, label {
-      font-family: 'Poppins', sans-serif;
-    }
-  
-    h1, h2, h3 {
-      font-family: 'Fredoka One', cursive;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-      margin: 0.4rem 0;
-    }
-  
-    h1 {
-      font-size: 2.2rem;
-      color: #FF5C5C;
-      animation: bounce 1.6s infinite;
-    }
-  
-    h2 {
-      font-size: 1.25rem;
-      color: #F9A825;
-      text-align: center;
-    }
-  
     select, input {
       background-color: #1E293B;
       border: 2px solid #3B82F6;
@@ -273,16 +244,6 @@
       font-weight: 600;
       transition: background 0.3s ease, box-shadow 0.3s ease;
       font-size: 0.95rem;
-    }
-  
-    .gradient-btn {
-      background: linear-gradient(45deg, #FF416C, #FF4B2B);
-      color: white;
-    }
-  
-    .gradient-btn:hover {
-      background: linear-gradient(45deg, #FF4B2B, #FF416C);
-      box-shadow: 0 8px 16px rgba(255, 92, 92, 0.5);
     }
   
     @keyframes bounce {
