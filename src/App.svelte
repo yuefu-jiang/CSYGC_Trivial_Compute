@@ -8,7 +8,7 @@
 	import { activeSession } from './session_store.js'
 	import GameSession from './lib/GameSession.svelte';
 	import { onMount } from 'svelte';
-
+	import { sessionID } from './session_store.js';
 
 	let displayResultTest;
 	let displayMsgTest;
@@ -62,11 +62,11 @@
 			<!-- Middle Part -->
 			<section class="flex flex-col items-center justify-center mt-6">
 				<h1 class="text-4xl font-bold">Trivial Compute!</h1>
-				<p class="mt-6 text-yellow-500">
+				<p class="mt-6">
 					Welcome! Click button below to start a new game.
 				</p>
 				<div>
-					<button on:click={openNewGamePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300 font-bold text-yellow-500">Start New Game</button>
+					<button on:click={openNewGamePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start New Game</button>
 				</div>
 			</section>
 
@@ -81,7 +81,7 @@
 		</main>
 	{/if}
 {:else if currentRoute === '#/game-session'}
-	<GameSession  sessionID={sessionID} />
+	<GameSession  sessionID={$sessionID} />
 
 {:else}
 	<p>404 - Page not found</p>
