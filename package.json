@@ -1,6 +1,6 @@
 {
-  "name": "vite-svelte-electron-tailwind",
-  "description": "Vite + Svelte + Electron + Tailwind",
+  "name": "CSYGC Trivial Compute",
+  "description": " Built using Vite + Svelte + Electron + Tailwind",
   "license": "MIT",
   "private": true,
   "version": "0.0.0",
@@ -33,7 +33,8 @@
     "electron-reload": "2.0.0-alpha.1",
     "svelte": "^5.19.5",
     "tailwindcss": "^4.0.0",
-    "vite": "^6.0.11"
+    "vite": "^6.0.11",
+    "svelte-window-system": "^0.1.0"
   },
   "dependencies": {
     "@smui/common": "^8.0.0-beta.3",
