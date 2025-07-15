@@ -5,9 +5,13 @@
     import Select, { Option } from '@smui/select';
     import Textfield from '@smui/textfield';
 
+    import { activeqID } from '../session_store.js'
+    import { activeSession } from '../session_store.js'
     let { closePage } = $props();
     
     const NUMBER_OF_CATEGORIES = 4;
+
+    let sessionID = '';
 
     let choices = [2, 3, 4];
     let numberOfPlayers = $state(0);
@@ -26,6 +30,19 @@
     ]);
     // let selectedCategories = new Set([]);
     let selectedCategoriesList = $state(Array(NUMBER_OF_CATEGORIES).fill(''));
+
+    let currentRoute = window.location.hash || '#/';
+    let queryParams = new URLSearchParams();
+
+
+
+    const updateRoute = () => {
+        const [path, query] = window.location.hash.split('?');
+        currentRoute = path || '#/';
+        queryParams = new URLSearchParams(query);
+    };
+
+
 
     function validateNames() {
         for (let i = 0; i < numberOfPlayers; i++) {
@@ -75,88 +92,139 @@
         return;
     }
 
+    // Generate a random ID (customizable length and characters)
+    function generateRandomID() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const length = 6;
+        return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+
+    // Main function: returns a unique ID not in dict keys
+    export function generateUniqueID(dict) {
+        let id;
+        do {
+            id = generateRandomID();
+        } while (dict.hasOwnProperty(id));
+        
+        return id;
+    };
+    async function newGameSession() {
+
+        const backendPort = window.api.getBackendPort()
+        const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 'data': 'new session' }),
+            method: 'POST',
+        });
+        // wait for result. If anything goes wrong it will fail to fetch
+        const result = await response.json();
+        const initData = result.data;
+        //console.log(initData)
+        const newSessionID = generateUniqueID(activeSession);
+        sessionID = newSessionID;
+
+        activeSession.update(store => {
+        const updated = {
+                ...store,
+                [newSessionID]: initData
+            };
+            //console.log('Updating session store:', updated);
+            return updated;
+        });
+        console.log('Started new session: ', newSessionID)
+        window.electronAPI.openGameSession(newSessionID);
+        closePage()
+
+    }
+
 </script>
-
-<main class="min-h-screen bg-slate-900 text-white flex flex-col">
-    <div>
-        <!-- Choose Number of Players -->
-        <section class="flex flex-col items-center justify-center mt-6">
-            <h1 class="text-4xl font-bold">Trivial Compute!</h1>
-            <h2 style="margin-top: 1em;">How many players?</h2>
-            <div class="flex gap-4 mt-4">
-                {#each choices as num}
-                <Button
-                    onclick={() => {
-                        updateNumberOfPlayers(num);
-                    }}
-                    class={`p-4 border border-indigo-900 border-opacity-80 rounded-md transition-all duration-300
-                    ${numberOfPlayers === num 
-                        ? 'bg-slate-700 hover:bg-slate-600 border-indigo-500 text-white' 
-                        : 'hover:bg-slate-800 bg-slate-900 text-white'}`}
-                >
-                    <Label>{num}</Label>
-                </Button>
-                {/each}
-            </div>
-        </section>
-
-        <!-- Player Names -->
-        {#if numberOfPlayers !== 0}
+{#if currentRoute === '#/'}
+    <main class="min-h-screen bg-slate-900 text-white flex flex-col">
+        <div>
+            <!-- Choose Number of Players -->
             <section class="flex flex-col items-center justify-center mt-6">
-                <h2 style="margin-top: 1em;">Enter your names!</h2>
-                {#each Array(numberOfPlayers) as _, num}
-                    <div class="flex flex-col gap-4 w-full max-w-md m-2">
-                        <input
-                            bind:value={playerNames[num]}
-                            oninput={(e) => allowOnlyLetters(e, num)}
-                            placeholder="Player {num + 1}"
-                            class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
-                        />
-                    </div>
-                {/each}
-            </section>
-        {/if}
-
-        <!-- Choose Categories -->
-        {#if validNames && numberOfPlayers !== 0}
-        <section class="flex flex-col items-center gap-6 mt-6 px-4">
-            <h2 style="margin-top: 1em;">Pick your game categories!</h2>
-            {#each Array(NUMBER_OF_CATEGORIES) as _, num}
-                {#if num === 0 || selectedCategoriesList[num - 1] !== "" }
-                    <div class="w-full max-w-md">
-                        <select
-                            class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
-                            bind:value={selectedCategoriesList[num]}
-                            onchange={() => { validateCategorySelection(); } }
-                            >
-                            <!-- <Option value={undefined}>Select category</Option> -->
-                            {#each categoryOptions as category}
-                                <option
-                                value={category}
-                                disabled={selectedCategoriesList.includes(category) && selectedCategoriesList[num] !== category}
-                                >
-                                {category}
-                                </option>
-                            {/each}
-                        </select>
-                    </div>
-                {/if}
-            {/each}
-          </section>
-        {/if}
-
-
-        <!-- Start Button -->
-        {#if validCategories}
-            <section class="flex flex-col items-center justify-center mt-6">
-                <div>
-                    <button onclick={closePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start Game</button>
+                <h1 class="text-4xl font-bold">Trivial Compute!</h1>
+                <h2 style="margin-top: 1em;">How many players?</h2>
+                <div class="flex gap-4 mt-4">
+                    {#each choices as num}
+                    <Button
+                        onclick={() => {
+                            updateNumberOfPlayers(num);
+                        }}
+                        class={`p-4 border border-indigo-900 border-opacity-80 rounded-md transition-all duration-300
+                        ${numberOfPlayers === num 
+                            ? 'bg-slate-700 hover:bg-slate-600 border-indigo-500 text-white' 
+                            : 'hover:bg-slate-800 bg-slate-900 text-white'}`}
+                    >
+                        <Label>{num}</Label>
+                    </Button>
+                    {/each}
                 </div>
             </section>
-        {/if}
-    </div>
-</main>
+
+            <!-- Player Names -->
+            {#if numberOfPlayers !== 0}
+                <section class="flex flex-col items-center justify-center mt-6">
+                    <h2 style="margin-top: 1em;">Enter your names!</h2>
+                    {#each Array(numberOfPlayers) as _, num}
+                        <div class="flex flex-col gap-4 w-full max-w-md m-2">
+                            <input
+                                bind:value={playerNames[num]}
+                                oninput={(e) => allowOnlyLetters(e, num)}
+                                placeholder="Player {num + 1}"
+                                class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
+                            />
+                        </div>
+                    {/each}
+                </section>
+            {/if}
+
+            <!-- Choose Categories -->
+            {#if validNames && numberOfPlayers !== 0}
+            <section class="flex flex-col items-center gap-6 mt-6 px-4">
+                <h2 style="margin-top: 1em;">Pick your game categories!</h2>
+                {#each Array(NUMBER_OF_CATEGORIES) as _, num}
+                    {#if num === 0 || selectedCategoriesList[num - 1] !== "" }
+                        <div class="w-full max-w-md">
+                            <select
+                                class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md
+                                    focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
+                                bind:value={selectedCategoriesList[num]}
+                                onchange={() => { validateCategorySelection(); } }
+                                >
+                                <!-- <Option value={undefined}>Select category</Option> -->
+                                {#each categoryOptions as category}
+                                    <option
+                                    value={category}
+                                    disabled={selectedCategoriesList.includes(category) && selectedCategoriesList[num] !== category}
+                                    >
+                                    {category}
+                                    </option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+                {/each}
+              </section>
+            {/if}
+
+
+            <!-- Start Button -->
+            {#if validCategories}
+                <section class="flex flex-col items-center justify-center mt-6">
+                    <div>
+                        <button onclick={newGameSession} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start Game</button>
+                    </div>
+                </section>
+            {/if}
+        </div>
+    </main>
+{:else if currentRoute === '#/game-session'}
+    <GameSession  sessionID={sessionID} />
+
+{:else}
+    <p>404 - Page not found</p>
+{/if}
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700&display=swap');

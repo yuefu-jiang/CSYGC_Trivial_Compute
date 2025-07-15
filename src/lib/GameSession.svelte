@@ -119,18 +119,18 @@
 			Game board not implemented yet. Example function that fetches random question/answer from JSON database's Science Category through python backend:
 		</p>
 		<div>
-			<button on:click={fetchQuestion} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Fetch Question &#x1F607</button>
+			<button on:click={fetchQuestion} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Fetch Question</button>
 		</div>
 		<div class="flex-col items-center justify-center" style="display: {displayResultTest ? 'block' : 'none'};">
 			<div>
-			&#128013 Question: {displayMsgQ} &#128013
+			Question: {displayMsgQ}
 			<button on:click={showAnswerDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Show Answer</button>
 			</div>
 			<div id="answerDiv Test" style="display: {displayAnswerTest ? 'block' : 'none'};">
-			&#128013 Answer: {displayMsgA} &#128013
+			Answer: {displayMsgA}
 			</div>
 		</div>
-		<button on:click={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300" style="display: {displayResultTest ? 'block' : 'none'};">Hide it &#x1fae0</button>
+		<button on:click={hideTestDiv} class="p-4 mt-2 ml-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300" style="display: {displayResultTest ? 'block' : 'none'};">Hide it</button>
 	</section>
 
 	<!-- Footer -->
