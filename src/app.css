@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700&display=swap');
+
 body, main, input, select, button, label {
   font-family: 'Poppins', sans-serif;
 }
