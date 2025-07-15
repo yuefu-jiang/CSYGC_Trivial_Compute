@@ -37,8 +37,7 @@
 		return () => window.removeEventListener('hashchange', updateRoute);
 	});
 
-	//temp
-	let sessionID = 'jjhgdsy';
+
 </script>
 
 {#if currentRoute === '#/'}
@@ -63,11 +62,11 @@
 			<!-- Middle Part -->
 			<section class="flex flex-col items-center justify-center mt-6">
 				<h1 class="text-4xl font-bold">Trivial Compute!</h1>
-				<p class="mt-6">
+				<p class="mt-6 text-yellow-500">
 					Welcome! Click button below to start a new game.
 				</p>
 				<div>
-					<button on:click={openNewGamePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Start New Game</button>
+					<button on:click={openNewGamePage} class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300 font-bold text-yellow-500">Start New Game</button>
 				</div>
 			</section>
 
