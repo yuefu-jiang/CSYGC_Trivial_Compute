@@ -8,7 +8,7 @@ import json
 from gameinstance import GameInstance
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
-Game1 = GameInstance()
+gameSession = {}
 
 QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
 
@@ -64,7 +64,10 @@ class Server:
         q_type = content.get('q_type')
         b_size = content.get('b_size')
         self.app.logger.info(content)
-        Game1.initialize(gameid,namelist)
+        newgame=GameInstance()
+        newgame.initialize(gameid,namelist)
+        gameSession.update({gameid:newgame})
+        print(gameSession, flush=True)
         return jsonify(
             {
                 'list': [0,1],
