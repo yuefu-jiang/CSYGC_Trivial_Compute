@@ -54,15 +54,17 @@ Trivialboard: This class implement a square gameboard represented in a n*n matri
         CT = the Center of the gameboard
         board = the gameboard itself, in a 2D-array
         which looks like:
-        [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [HQ][NL][NL][NL][CT][NL][NL][NL][HQ]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [NL][  ][  ][  ][NL][  ][  ][  ][NL]
-        [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
+                                 column  j              
+                        0   1   2   3   4   5   6   7   8   
+                   0  [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
+                   1  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+                   2  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+                   3  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+           row  i  4  [HQ][NL][NL][NL][CT][NL][NL][NL][HQ]
+                   5  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+                   6  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+                   7  [NL][  ][  ][  ][NL][  ][  ][  ][NL]
+                   8  [RA][NL][NL][NL][HQ][NL][NL][NL][RA]
 
 
 GameInstance: This class implement a game object containing all necessary instance and attributes of game

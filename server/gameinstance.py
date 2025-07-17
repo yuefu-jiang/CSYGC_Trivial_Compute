@@ -29,9 +29,11 @@ class GameInstance:
         self.wedgelist = None
         #get/generate a game id
         self.gameid=gameid
+        print(f"started game with ID:{self.gameid}", flush=True)
         #store all game paremeters
         self.boardsize = b_size
         self.playerno = len(playerlist)
+        print(f"Total no. of players:{self.playerno}", flush=True)
         self.wedgelist = Wedge(q_type)
         #generate the game board
         self.gboard = Trivialboard(self.boardsize)
@@ -49,7 +51,7 @@ class GameInstance:
             self.tokenlist[i].label = playerlist[i]
             self.tokenlist[i].row = self.gboard.CT[0]
             self.tokenlist[i].col = self.gboard.CT[1]
-            print(self.tokenlist[i].label,self.tokenlist[i].row,self.tokenlist[i].col)
+            print(f"player {i}: name: {self.tokenlist[i].label} location: [{self.tokenlist[i].row},{self.tokenlist[i].col}]", flush=True)
             i+=1
 
     def coloring(self):
@@ -75,6 +77,17 @@ class GameInstance:
                         self.gboard.board[i][j].color = temp_square[t]
                         t = (t+1)%len(temp_square)
                 j+=1
+            i+=1
+
+    def currentpos(self,name:str)->list:
+        """
+        :param name: label of player
+        :return: coordinates of the current position of the token in a list of [i,j]
+        """
+        i=0
+        while i<self.playerno:
+            if self.tokenlist[i].label == name:
+                return list[self.tokenlist[i].row, self.tokenlist[i].col]
             i+=1
 
     def showdest(self, tid: int, steps:int)->list:

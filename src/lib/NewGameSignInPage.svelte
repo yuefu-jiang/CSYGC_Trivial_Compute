@@ -126,6 +126,29 @@
             return updated;
 
         });
+
+		//get some data from frontend input
+		//treat number of players = length of player name list		
+		//a list player names / size of game board
+
+		const gameinput = {
+			gameid: newSessionID,
+			namelist: playerNames,
+			q_type: 4,
+			b_size: 9,
+		};
+		
+		//route to game initialize
+		console.log("Let the game start", backendPort)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/initializegametest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const initialize_result = await initialize_response.json();
+		const msg = initialize_result.data
+        console.log("Response from Flask:", msg)
+
         console.log('Started new session: ', newSessionID)
         window.electronAPI.openGameSession(newSessionID);
         closePage()
