@@ -2,3 +2,6 @@ node_modules/
 .DS_Store
 out/
 electron/build
+py311/
+
+server/__pycache__/
