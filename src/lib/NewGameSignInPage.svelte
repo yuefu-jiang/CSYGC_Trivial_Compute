@@ -105,27 +105,27 @@
     async function newGameSession() {
 
         const backendPort = window.api.getBackendPort()
-        const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 'data': 'new session' }),
-            method: 'POST',
-        });
-        // wait for result. If anything goes wrong it will fail to fetch
-        const result = await response.json();
-        const initData = result.data;
+        // const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({ 'data': 'new session' }),
+        //     method: 'POST',
+        // });
+        // // wait for result. If anything goes wrong it will fail to fetch
+        // const result = await response.json();
+        // const initData = result.data;
         //console.log(initData)
         const newSessionID = generateUniqueID(activeSession);
         sessionID.set(newSessionID);
 
-        activeSession.update(store => {
-        const updated = {
-                ...store,
-                [newSessionID]: initData
-            };
-            //console.log('Updating session store:', updated);
-            return updated;
+        // activeSession.update(store => {
+        // const updated = {
+        //         ...store,
+        //         [newSessionID]: initData
+        //     };
+        //     //console.log('Updating session store:', updated);
+        //     return updated;
 
-        });
+        // });
 
 		//get some data from frontend input
 		//treat number of players = length of player name list		
