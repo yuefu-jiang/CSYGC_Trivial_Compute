@@ -5,11 +5,13 @@ import sys
 import os
 import logging
 import json
+from pathlib import Path
+
 
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
 
-QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
+QUESTION_FILE = Path(__file__).resolve().parents[2] / "questions.json"
 
 
 def setup_server(*args, **kwargs):

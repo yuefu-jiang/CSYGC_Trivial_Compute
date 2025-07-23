@@ -1,4 +1,1 @@
-node_modules/
-.DS_Store
-out/
-electron/build
+input_test_files/

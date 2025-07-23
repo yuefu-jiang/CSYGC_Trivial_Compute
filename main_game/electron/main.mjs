@@ -13,11 +13,13 @@ const __filename = fileURLToPath(import.meta.url); // Get the full file path
 const __dirname = path.dirname(__filename); // Extract the directory name
 const require = createRequire(import.meta.url);
 if (require('electron-squirrel-startup')) app.quit();
-
+console.log("dirname, ", __dirname)
 const isDevEnvironment = process.env.DEV_ENV === 'true'
 
 // enable live reload for electron in dev mode
 if (isDevEnvironment) {
+    console.log("dirname, ", __dirname)
+    log('firname: ' + __dirname);
     require('electron-reload')(__dirname, {
         electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
         hardResetMethod: 'exit'
@@ -79,7 +81,7 @@ const createWindow = () => {
 
         // if your vite app is running on a different port, change it here
         setTimeout(() => {
-            mainWindow.loadURL('http://localhost:5173/');
+            mainWindow.loadURL('http://localhost:5174/');
         }, 500);
         // Open the DevTools.
         mainWindow.webContents.on("did-frame-finish-load", () => {
@@ -125,7 +127,7 @@ function createGameSessionWindow(sessionID) {
     });
 
 
-    const url = `http://localhost:5173/#/game-session?id=${sessionID}`;
+    const url = `http://localhost:5174/#/game-session?id=${sessionID}`;
     gameWindow.loadURL(url);
 }
 
