@@ -9,7 +9,7 @@
 	import Dice from './Dice.svelte';
 	import Overlay from './Overlay.svelte';
 
-	let showOverlay = false;
+	let showOverlayDice = false;
 
 	export let sessionID;
 
@@ -335,7 +335,7 @@
 
 
 	function handleClose() {
-		showOverlay = false;
+		showOverlayDice = false;
 	}
 
 	// Handle click outside content (now properly bound to DOM element)
@@ -362,19 +362,18 @@
 				/>
 			</a>
 		<div class="items-center justify-between">
-			<button on:click={() => showOverlay = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
+			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
 
-		{#if showOverlay}
-		  <!-- This is a DOM div, so |self works -->
-		  <Overlay bind:show={showOverlay} >
-		  	<h2> Dice Roll! </h2>
-		    <Dice 
-		      autoClose={true}
-		      on:close={handleClose}
-		      on:rolled={handleRolled}
-		    />
-		  </Overlay>
-		{/if}
+
+		<Overlay bind:show={showOverlayDice} >
+			<h2> Dice Roll! </h2>
+			<Dice 
+				autoClose={true}
+				on:close={handleClose}
+				on:rolled={handleRolled}
+			/>
+		</Overlay>
+
 
 		</div>
 			
