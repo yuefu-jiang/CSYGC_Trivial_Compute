@@ -12,6 +12,7 @@
 	let showOverlayDice = false;
 
 	export let sessionID;
+	export let selectedCategoriesList;
 
 	onMount(async () => {
 		const hash = window.location.hash;
@@ -37,6 +38,7 @@
 			return updated;
 		});
 		console.log('Started session:', sessionID)
+		getcolor();
 		initPlayerWedges();
 		updateGridSize();
 		resizeObserver = new ResizeObserver(updateGridSize);
@@ -69,7 +71,8 @@
 	let question;
 	let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
 	let activePiece = 0; // 
-
+	// This is the color dict
+    let inverseDictColor = {};
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -152,11 +155,54 @@
 
 
     //TEMP: getting from backend?
-    let selected_cat = ["Geography", "History", "Math", "Computer Science"]
+    //let selected_cat = ["Geography", "History", "Math", "Computer Science"]
+	//get from parent
+	let selected_cat = selectedCategoriesList;
 
-	// This is the color dict
-	// TODO: get this from backend
-	const inverseDictColor = {
+	// TODO: get color from backend, run at launch
+	
+    async function getcolor() {
+
+        const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting color with session: ', sessionID)
+		//route to get color
+		console.log("getting board color grid", backendPort)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getboardcolor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		inverseDictColor = result.color
+        const msg = result.msg
+        console.log('get color result', msg)
+    }
+
+	async function getposition() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting position: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getposition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		let position = result.pos
+        const msg = result.msg
+        console.log('get pos result', msg)
+        return position
+    }
+	
+	/*const inverseDictColor = {
 	    "0,1": "#1f77b4",
 	    "0,5": "#1f77b4",
 	    "1,4": "#1f77b4",
@@ -198,6 +244,7 @@
 	    "8,2": "#d62728",
 	    "8,6": "#d62728"
 	}
+    */
 
 	// reactive statement
 	// This will monitor changes on piece pos change

@@ -11,26 +11,43 @@ class Wedge:
             self.chosen.add(wedgeset[i])
 
 class Token:
-    def __init__(self, wedge: Wedge):
+    def __init__(self, wedge: list):
         """
         This class implement a token object
         """
         self.label =""
         self.row = -1
         self.col = -1
-        self.missing = wedge.chosen.copy()
-        self.collection = set()
+        self.wedge = wedge.copy()
         self.score = 0
         self.HqOk = True
         self.CenterOk = True
         self.full = False
+        for i in range(len(self.wedge)):
+            self.wedge[i].append(False)
 
-    def addw(self, item: str):
-        self.missing.discard(item)
-        self.collection.add(item)
-        if len(self.missing) == 0:
-            self.full = True
+    def position(self)->list:
+        return list(self.row,self.col)
 
+    def moveto(self, i:int, j:int):
+        self.row=i
+        self.col=j
+
+    def collectupdate(self, item: int):
+        if not self.wedge[item][-1]:
+            self.wedge[item][-1] = True
+            self.score +=1
+        self.updatefull()
+        return "updated", self.score, self.full
+    
+    def updatefull(self):
+        for i in range(len(self.wedge)):
+            if not self.wedge[i][-1]:
+                return
+            i+=1
+        self.full = True
+        return
+    
 class Square:
     def __init__(self, valid:bool, cat:str):
         """
@@ -40,7 +57,7 @@ class Square:
         """
         self.valid = valid
         self.cat = cat
-        self.color = None
+        self.color = "#000000"
 
 class Trivialboard:
     def __init__(self, size_in:int):
@@ -87,9 +104,9 @@ class Trivialboard:
         while i < len(self.board):
             while j < len(self.board[i]):
                 if self.board[i][j].valid:
-                    print(f"[{self.board[i][j].cat}]", end="", flush=True)
+                    print(f"[{self.board[i][j].cat},{self.board[i][j].color}]", end="", flush=True)
                 else:
-                    print(f"[  ]", end="", flush=True)
+                    print(f"[          ]", end="", flush=True)
                 j += 1
             j=0
             print()

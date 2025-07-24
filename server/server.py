@@ -42,6 +42,10 @@ class Server:
         )
 
         self.app.add_url_rule(
+            "/getboardcolor", "getboardcolor", self.getboardcolor, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
@@ -75,16 +79,16 @@ class Server:
             'category': category
         })
     
-
     def initializegametest(self):
         content = request.get_json()
         gameid = content.get('gameid')
         namelist = content.get('namelist',[])
-        q_type = content.get('q_type')
+        q_cat = content.get('q_cat')
+        q_type = len(q_cat)
         b_size = content.get('b_size')
         self.app.logger.info(content)
         newgame=GameInstance()
-        newgame.initialize(gameid,namelist)
+        newgame.initialize(gameid,namelist,q_cat)
         gameSession.update({gameid:newgame})
         print(gameSession, flush=True)
         return jsonify(
@@ -94,6 +98,52 @@ class Server:
             }
         )    
 
+    def rollDice(self):
+        temp = list()
+        #some code
+
+        return jsonify(
+            {
+                'validSq': temp,
+            }
+        )
+    
+    def playTrun(self):
+        temp = list()
+        status = "true"
+        #some code
+
+        return jsonify(
+            {
+                '': temp,
+                'message': 'player move success',
+                'status': status,
+            }
+        )
+    
+    def correctAnswer(self):
+        score = 0
+        isWinner = False
+        #some code
+
+        return jsonify(
+            {
+                'score': score,
+                'winner': isWinner
+            }
+        )
+
+    def getboardcolor(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        color_dict = temp.colordict()
+        return jsonify(
+            {
+                'color': color_dict,
+                'msg': 'get color success',
+            }
+        )    
     
     def return_question(self, category, qid, mark_used=False):
         try:
