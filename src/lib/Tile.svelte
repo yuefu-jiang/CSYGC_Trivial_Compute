@@ -31,7 +31,7 @@
     </div>
     {#each pieces.slice(0, 4) as piece, index}
         <div
-            class="absolute w-[30%] h-[30%] rounded-full shadow-md border-2 border-black
+            class="absolute w-[35%] h-[35%] rounded-full shadow-md border-2 border-black outline-3 outline-yellow-300 outline-dotted
                    {pieceColors[piece]}"
             style="
 

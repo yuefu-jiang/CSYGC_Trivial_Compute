@@ -5,6 +5,8 @@ import sys
 import os
 import logging
 import json
+import random
+
 from gameinstance import GameInstance
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
@@ -39,6 +41,10 @@ class Server:
             "/initializegametest", "initializegametest", self.initializegametest, methods=["POST"]
         )
 
+        self.app.add_url_rule(
+            "/roll", "roll", self.roll, methods=["POST"]
+        )
+
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -57,6 +63,19 @@ class Server:
             }
         )
     
+    def roll(self):
+        roll_result = random.randint(1, 6)
+        # Stub: random coordinate and category
+        coordinate = [random.randint(0, 7), random.randint(0, 7)]
+        categories = ["Science", "History", "Art", "Sports", "Geography", "Entertainment"]
+        category = random.choice(categories)
+        return jsonify({
+            'roll': roll_result,
+            'coordinate': coordinate,
+            'category': category
+        })
+    
+
     def initializegametest(self):
         content = request.get_json()
         gameid = content.get('gameid')
