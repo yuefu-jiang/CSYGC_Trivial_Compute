@@ -343,6 +343,7 @@
                 }
 
                 tiles.push({
+                	key,
                     row,
                     col,
                     active: activeTiles.has(key),
@@ -463,7 +464,23 @@
 		}
 	}
 
+	let possibleDestinations = ['0,3', '0,5'];
 
+	function handleTileClick(event) {
+		// The key is available in event.detail.key
+		const clickedTileKey = event.detail.key;
+		console.log('Selected tile:', clickedTileKey);
+
+		// Do something with the key, like move a player piece
+		movePlayer(clickedTileKey);
+	}
+
+	function movePlayer(destinationKey) {
+		// TODO: send destinationKey to backend, update board layout, then call updateposition()
+    	//updatePieceLoc(newLocObj)
+        updateposition()
+		console.log('Moving player to', destinationKey);
+	}
 
 </script>
 
@@ -510,7 +527,7 @@
 			}
 		>
 		    {#each tiles as tile}
-		        <Tile active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor}/>
+		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
 		    {/each}
 		    <div class="absolute"
 		    	style="left: {tileSize}px;
