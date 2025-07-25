@@ -27,7 +27,7 @@ class Token:
             self.wedge[i].append(False)
 
     def position(self)->list:
-        return list(self.row,self.col)
+        return list([self.row,self.col])
 
     def moveto(self, i:int, j:int):
         self.row=i

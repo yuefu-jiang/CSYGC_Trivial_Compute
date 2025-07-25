@@ -12,7 +12,6 @@
 	let showOverlayDice = false;
 
 	export let sessionID;
-	export let selectedCategoriesList;
 
 	onMount(async () => {
 		const hash = window.location.hash;
@@ -39,6 +38,9 @@
 		});
 		console.log('Started session:', sessionID)
 		getcolor();
+		updateposition();
+		getnames();
+		getq();
 		initPlayerWedges();
 		updateGridSize();
 		resizeObserver = new ResizeObserver(updateGridSize);
@@ -69,10 +71,14 @@
 	let category ='science'; // TEMP: fix at science for now
 	let qid;
 	let question;
-	let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
+	//let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
+	let players = [];
 	let activePiece = 0; // 
 	// This is the color dict
     let inverseDictColor = {};
+	// player position dic
+    let piecesPerTile = {};
+	let validmove = [];
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -144,10 +150,10 @@
     // player 0 = blue, 1 = yellow, 2 = red, 3 = green
     // This is the initial dictionary to update. 
     // TODO: fetch the init pos from backend
-    let piecesPerTile = {
+    /*let piecesPerTile = {
 	    '0,1': [0,1,2],
 	    '0,2': [3],
-    };
+    };*/
 
     // Precompute tiles
     let tiles = [];
@@ -157,10 +163,9 @@
     //TEMP: getting from backend?
     //let selected_cat = ["Geography", "History", "Math", "Computer Science"]
 	//get from parent
-	let selected_cat = selectedCategoriesList;
+	let selected_cat = [];
 
 	// TODO: get color from backend, run at launch
-	
     async function getcolor() {
 
         const backendPort = window.api.getBackendPort()
@@ -177,12 +182,12 @@
         body: JSON.stringify(gameinput)
         });
 		const result = await initialize_response.json();
-		inverseDictColor = result.color
-        const msg = result.msg
+		inverseDictColor = result.color;
+        const msg = result.msg;
         console.log('get color result', msg)
     }
-
-	async function getposition() {
+    // update current position of all players from backend, run when called
+	async function updateposition() {
 		const backendPort = window.api.getBackendPort()
 
 		const gameinput = {
@@ -190,18 +195,82 @@
 		};
 		console.log('getting position: ', sessionID)
 
-        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getposition`, {
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getallpos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameinput)
         });
 		const result = await initialize_response.json();
-		let position = result.pos
-        const msg = result.msg
+		piecesPerTile = result.pos;
+        const msg = result.msg;
         console.log('get pos result', msg)
-        return position
     }
-	
+
+    // get namelist of all players from backend, run when called
+	async function getnames() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting names: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getnames`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		players = result.name;
+		console.log('names: ', players)
+        const msg = result.msg;
+        console.log('get name result', msg)
+    }
+
+    // get question list from backend, run when called
+	async function getq() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting question: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getqtype`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		selected_cat = result.qtype;
+		console.log('question types', selected_cat)
+        const msg = result.msg;
+        console.log('get question result', msg)
+    }
+
+    // get valid position list from backend, run when called
+	async function getvalidmove(tid,steps) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+			steps: steps,
+		};
+		console.log('getting valid move: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getvalidmove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		validmove = result.valid_move;
+		console.log('valid move', validmove)
+        const msg = result.msg;
+        console.log('get valid move result', msg)
+    }
+
 	/*const inverseDictColor = {
 	    "0,1": "#1f77b4",
 	    "0,5": "#1f77b4",
@@ -353,12 +422,14 @@
     // TODO: hook with backend returns
     function handlePieceMove() {
     	// should get this from backend
-
+        /*
     	const newLocObj = {
     		'8,8': [0,1,3],
     		'8,1': [2]
     	}
     	updatePieceLoc(newLocObj)
+		*/
+        updateposition()
     }
 
 	function handleRolled(event) {
@@ -368,7 +439,7 @@
 
 		// TODO: get the next piece position
 		// This can be done by returning the roll result to backend
-
+		getvalidmove(activePiece,lastRollResult.roll);
 		// TEST: move piece 0 by 5 to the right
 		// this should be returned by backend server
 		const newLocObj = {
@@ -376,8 +447,8 @@
 	    	'0,2': [3],
 	    	'0,4': [0],
     	}
-    	updatePieceLoc(newLocObj)
-
+    	//updatePieceLoc(newLocObj)
+        updateposition()
 	}
 
 

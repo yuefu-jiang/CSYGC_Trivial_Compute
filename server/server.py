@@ -46,6 +46,22 @@ class Server:
         )
 
         self.app.add_url_rule(
+            "/getnames", "getnames", self.getnames, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getallpos", "getallpos", self.getallpos, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getqtype", "getqtype", self.getqtype, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getvalidmove", "getvalidmove", self.getvalidmove, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
@@ -98,15 +114,20 @@ class Server:
             }
         )    
 
-    def rollDice(self):
-        temp = list()
-        #some code
-
+    def getvalidmove(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        steps = content.get('steps')
+        temp = gameSession.get(gameid)
+        valid_list = temp.getValidChoices(tid,steps)
+        print(f'{type(valid_list)}, {valid_list}',flush=True)
         return jsonify(
             {
-                'validSq': temp,
+                'validSq': valid_list,
+                'msg': 'get valid square success',
             }
-        )
+        )    
     
     def playTrun(self):
         temp = list()
@@ -144,7 +165,43 @@ class Server:
                 'msg': 'get color success',
             }
         )    
+
+    def getallpos(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        pos_dict = temp.allcurrentpos()
+        return jsonify(
+            {
+                'pos': pos_dict,
+                'msg': 'get coordinates success',
+            }
+        )    
+
+    def getnames(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        name_list = temp.allnames()
+        return jsonify(
+            {
+                'name': name_list,
+                'msg': 'get names success',
+            }
+        )    
     
+    def getqtype(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        q_list = temp.q_cat
+        return jsonify(
+            {
+                'qtype': q_list,
+                'msg': 'get question type success',
+            }
+        )         
+
     def return_question(self, category, qid, mark_used=False):
         try:
             with open(QUESTION_FILE, 'r') as f:

@@ -106,7 +106,33 @@ class GameInstance:
                 j+=1
             i+=1
         return temp
-    
+
+    def allcurrentpos(self)->dict:
+        """
+        return: a dict of all coordinates containing token in a dict -->'0,1': [0,1,2]
+        """
+        temp = dict()
+        i=0
+        for i in range(self.playerno):
+            temp_pos = self.tokenlist[i].position()
+            if not str(temp_pos[0])+","+str(temp_pos[1]) in temp:
+                temp.update({str(temp_pos[0])+","+str(temp_pos[1]):[i]})
+            else:
+                temp[str(temp_pos[0])+","+str(temp_pos[1])].append(i)
+            i+=1        
+        return temp
+
+    def allnames(self)->list:
+        """
+        return: a list of all names ['a','b',...]
+        """
+        temp = list()
+        i=0
+        for i in range(self.playerno):
+            temp.append(self.tokenlist[i].label)
+            i+=1
+        return temp
+
     def tidOf(self,name:str)->int:
         """
         :param name: label of player
@@ -130,13 +156,6 @@ class GameInstance:
                 return i
             i+=1
         return -1
-
-    def currentpos(self,tid:int)->list:
-        """
-        :param tid: token id of player
-        :return: coordinates of the current position of the token in a list of [i,j]
-        """
-        return self.tokenlist[tid].position()
 
     def getValidChoices(self, tid: int, steps:int)->list:
         """
