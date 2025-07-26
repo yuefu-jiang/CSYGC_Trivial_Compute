@@ -14,6 +14,8 @@ class Token:
     def __init__(self, wedge: list):
         """
         This class implement a token object
+        wedge list input is like:
+        [['red', '#d62728', 'Geography'], ['blue', '#1f77b4', 'History'], ['orange', '#ff7f0e', 'Math'], ['green', '#2ca02c', 'Computer Science']]
         """
         self.label =""
         self.row = -1
@@ -38,7 +40,6 @@ class Token:
             self.wedge[item][-1] = True
             self.score +=1
         self.updatefull()
-        return "updated", self.score, self.full
     
     def updatefull(self):
         for i in range(len(self.wedge)):

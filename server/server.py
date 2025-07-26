@@ -68,6 +68,10 @@ class Server:
         )
 
         self.app.add_url_rule(
+            "/addwedge", "addwedge", self.addwedge, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
@@ -150,6 +154,18 @@ class Server:
             }
         )
     
+    def addwedge(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        temp = gameSession.get(gameid)
+        temp.updatePlayerWedge(tid)
+        return jsonify(
+            {
+                'msg': 'player wedge updated',
+            }
+        )
+
     def correctAnswer(self):
         score = 0
         isWinner = False

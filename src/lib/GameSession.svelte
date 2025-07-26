@@ -289,10 +289,28 @@
         body: JSON.stringify(gameinput)
         });
 		const result = await initialize_response.json();
-		//possibleDestinations = result.valid_list;
-		//console.log('valid move', possibleDestinations)
         const msg = result.msg;
         console.log('move result', msg)
+    }
+
+	// update player collected wedges
+	async function addwedge(tid) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+		};
+		console.log('sending a move on game:', sessionID,' for player', tid)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/addwedge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+        const msg = result.msg;
+        console.log('added result', msg)
     }
 
 	/*const inverseDictColor = {
@@ -378,7 +396,7 @@
                 });
             }
         }
-        //initPlayerWedges();
+        initPlayerWedges();
         console.log(playerTiles)
     }
 
@@ -426,7 +444,7 @@
     // Function that actually got used by button
     // TODO: hook this with backend return
     // should be triggered when a player should have a wedge filled
-    function handleWedgeFill() {
+    function handleWedgeFill(tid,color) {
     	// this is how to fill a color to a wedge
     	// updates player 0, row0, col 0 to yellow
     	updateTileColor(0, 0,0, '#ff7f0e')
@@ -437,6 +455,7 @@
     }
 
     // method that MOVES the piece
+	/*
     function updatePieceLoc(newLocObj) {
     	piecesPerTile = newLocObj;
     	piecesPerTile = { ...piecesPerTile };
@@ -445,17 +464,16 @@
 
     // Function that handles the data of piece moves
     // TODO: hook with backend returns
-    function handlePieceMove() {
+
+	function handlePieceMove() {
     	// should get this from backend
-        /*
     	const newLocObj = {
     		'8,8': [0,1,3],
     		'8,1': [2]
     	}
     	updatePieceLoc(newLocObj)
-		*/
-        getallposition()
     }
+    */
 
 	function handleRolled(event) {
 		let lastRollResult = null;
@@ -468,13 +486,13 @@
 		// TEST: move piece 0 by 5 to the right
 
 		// this should be returned by backend server
-		const newLocObj = {
+		/*const newLocObj = {
 	    	'0,1': [1,2],
 	    	'0,2': [3],
 	    	'0,4': [0],
     	}
+		*/
     	//updatePieceLoc(newLocObj)
-        getallposition()
 	}
 
 
@@ -498,6 +516,8 @@
         //The key is in format str: 0,2
 		// Do something with the key, like move a player piece
 		movePlayer(clickedTileKey);
+        possibleDestinations = []
+		getallposition()
 	}
 
 	function movePlayer(destinationKey) {
@@ -505,7 +525,6 @@
         moveToDes(activePiece,destinationKey)
 
     	//updatePieceLoc(newLocObj)
-        getallposition()
 		console.log('Moving player to', destinationKey);
 	}
 

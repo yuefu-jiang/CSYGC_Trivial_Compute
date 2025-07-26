@@ -47,6 +47,8 @@ class GameInstance:
         self.choosewedege(len(q_cat))
         print(f"Total no. of players:{self.playerno}", flush=True)
         print(self.wedgelist)
+        #the list is like that [['red', '#d62728', 'Geography'], ['blue', '#1f77b4', 'History'], ['orange', '#ff7f0e', 'Math'], ['green', '#2ca02c', 'Computer Science']]
+
         #generate the game board
         self.gboard = Trivialboard(self.boardsize)
         #assign color to squares
@@ -164,6 +166,18 @@ class GameInstance:
                 return i
             i+=1
         return -1
+    
+    def colorIdof(self, color:str)->int:
+        """
+        :param color: color input
+        :return: id of the color
+        """
+        i=0
+        while i < len(self.q_cat):
+            if self.wedgelist[i][1] == color:
+                return i
+            i+=1
+        return -1    
 
     def getValidChoices(self, tid: int, steps:int)->list:
         """
@@ -179,6 +193,16 @@ class GameInstance:
         :parem j: col number of the destination
         """
         self.tokenlist[tid].moveto(i,j)
+
+    def updatePlayerWedge(self, tid: int):
+        """
+        :param tid: id number of player (0/1/2....)
+        :parem color: color of wedge
+        """
+        row = self.tokenlist[tid].row
+        col = self.tokenlist[tid].col
+        self.tokenlist[tid].collectupdate(self.colorIdof(self.gboard.board[row][col].color))
+        
         
     def correctAnswer(self, tid: int, cat:str):
         """
