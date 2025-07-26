@@ -8,10 +8,15 @@
 	import { onMount } from 'svelte';
 	import Dice from './Dice.svelte';
 	import Overlay from './Overlay.svelte';
+	import QuestionModal from './QuestionModal.svelte';
 
 	let showOverlayDice = false;
 
 	export let sessionID;
+
+	let showQuestionModal = false;
+	let modalQuestion = "";
+	let modalAnswer = "";
 
 	onMount(async () => {
 		const hash = window.location.hash;
@@ -145,6 +150,23 @@
 	    '0,1': [0,1,2],
 	    '0,2': [3],
     };
+
+	async function openQuestionModal() {
+		const currCatQlist = [...$activeSession[category]];
+		const qid = getRandomItem(currCatQlist);
+		const backendPort = window.api.getBackendPort();
+
+		try {
+			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
+			const result = await res.json();
+			modalQuestion = result.data.question;
+			modalAnswer = result.data.answer;
+			showQuestionModal = true;
+			console.log("Fetched Q&A:", result.data);
+		} catch (err) {
+			console.error("Failed to fetch question:", err);
+		}
+	}
 
     // Precompute tiles
     let tiles = [];
@@ -363,7 +385,12 @@
 			</a>
 		<div class="items-center justify-between">
 			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
-
+			<button
+				on:click={openQuestionModal}
+				class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300"
+			>
+				Show Random Question
+			</button>
 
 		<Overlay bind:show={showOverlayDice} >
 			<h2> Dice Roll! </h2>
@@ -482,6 +509,7 @@
 		</div>
 
 		<div class="aspect-square bg-white-500 border border-gray-400 rounded-sm">
+		<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} />
 			
 		</div>
 	</section>
