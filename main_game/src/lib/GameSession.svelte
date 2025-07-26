@@ -14,10 +14,12 @@
 
 	export let sessionID;
 
+	// Question popup variables ---------------------------------
 	let showQuestionModal = false;
 	let modalQuestion = "";
 	let modalAnswer = "";
-
+	// -----------------------------------------------------
+	
 	onMount(async () => {
 		const hash = window.location.hash;
 		const params = new URLSearchParams(hash.split('?')[1]);
@@ -151,11 +153,14 @@
 	    '0,2': [3],
     };
 
+	/**
+	 * Function to open question modal
+	 */
 	async function openQuestionModal() {
+		//** TODO: change how questions category and qid is selected */*/
 		const currCatQlist = [...$activeSession[category]];
 		const qid = getRandomItem(currCatQlist);
 		const backendPort = window.api.getBackendPort();
-
 		try {
 			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
 			const result = await res.json();
@@ -166,6 +171,15 @@
 		} catch (err) {
 			console.error("Failed to fetch question:", err);
 		}
+	}
+
+	/**
+	 * event handler for result of question modal popup
+	 * event.detail.wasCorrect will be true if player answered correctly and false if not
+	*/
+	function handleAnswered(event) {
+		console.log("User got it right?", event.detail.wasCorrect);
+		/** TODO: continue game accordingly */
 	}
 
     // Precompute tiles
@@ -509,7 +523,7 @@
 		</div>
 
 		<div class="aspect-square bg-white-500 border border-gray-400 rounded-sm">
-		<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} />
+		<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
 			
 		</div>
 	</section>

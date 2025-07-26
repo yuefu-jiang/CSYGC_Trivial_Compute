@@ -24,7 +24,7 @@
             return false;
         }
 		if (action === "correct" || action === "incorrect") {
-			dispatch("answered", { correct: action === "correct", answer });
+			dispatch("answered", { wasCorrect: action === "correct"});
 			open = false;
 		}
         return true
