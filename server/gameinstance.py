@@ -4,6 +4,7 @@ from gameobject import Wedge
 from gameobject import Token
 from gamehelperfunct import destination
 from gamehelperfunct import rolldice
+from gamehelperfunct import posConvert
 
 class GameInstance:
     def __init__(self):
@@ -114,12 +115,19 @@ class GameInstance:
         temp = dict()
         i=0
         for i in range(self.playerno):
-            temp_pos = self.tokenlist[i].position()
+            temp_pos = posConvert(self.tokenlist[i].position())
+            """
             if not str(temp_pos[0])+","+str(temp_pos[1]) in temp:
                 temp.update({str(temp_pos[0])+","+str(temp_pos[1]):[i]})
             else:
                 temp[str(temp_pos[0])+","+str(temp_pos[1])].append(i)
-            i+=1        
+            i+=1
+            """
+            if not temp_pos in temp:
+                temp.update({temp_pos:[i]})
+            else:
+                temp[temp_pos].append(i)
+            i+=1
         return temp
 
     def allnames(self)->list:

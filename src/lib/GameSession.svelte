@@ -38,7 +38,7 @@
 		});
 		console.log('Started session:', sessionID)
 		getcolor();
-		updateposition();
+		getallposition();
 		getnames();
 		getq();
 		initPlayerWedges();
@@ -78,7 +78,8 @@
     let inverseDictColor = {};
 	// player position dic
     let piecesPerTile = {};
-	let validmove = [];
+	// possible destination after roll dice
+	let possibleDestinations = [];
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -187,7 +188,7 @@
         console.log('get color result', msg)
     }
     // update current position of all players from backend, run when called
-	async function updateposition() {
+	async function getallposition() {
 		const backendPort = window.api.getBackendPort()
 
 		const gameinput = {
@@ -265,10 +266,33 @@
         body: JSON.stringify(gameinput)
         });
 		const result = await initialize_response.json();
-		validmove = result.valid_move;
-		console.log('valid move', validmove)
+		possibleDestinations = result.valid_list;
+		console.log('valid move', possibleDestinations)
         const msg = result.msg;
         console.log('get valid move result', msg)
+    }
+
+	// move a player in backend
+	async function moveToDes(tid,locationKey) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+			locationKey: locationKey,
+		};
+		console.log('sending a move on game:', sessionID,' for player', tid)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/moveToDes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		//possibleDestinations = result.valid_list;
+		//console.log('valid move', possibleDestinations)
+        const msg = result.msg;
+        console.log('move result', msg)
     }
 
 	/*const inverseDictColor = {
@@ -430,7 +454,7 @@
     	}
     	updatePieceLoc(newLocObj)
 		*/
-        updateposition()
+        getallposition()
     }
 
 	function handleRolled(event) {
@@ -442,6 +466,7 @@
 		// This can be done by returning the roll result to backend
 		getvalidmove(activePiece,lastRollResult.roll);
 		// TEST: move piece 0 by 5 to the right
+
 		// this should be returned by backend server
 		const newLocObj = {
 	    	'0,1': [1,2],
@@ -449,7 +474,7 @@
 	    	'0,4': [0],
     	}
     	//updatePieceLoc(newLocObj)
-        updateposition()
+        getallposition()
 	}
 
 
@@ -464,21 +489,23 @@
 		}
 	}
 
-	let possibleDestinations = ['0,3', '0,5'];
+	//let possibleDestinations = ['0,3', '0,5'];
 
 	function handleTileClick(event) {
 		// The key is available in event.detail.key
 		const clickedTileKey = event.detail.key;
 		console.log('Selected tile:', clickedTileKey);
-
+        //The key is in format str: 0,2
 		// Do something with the key, like move a player piece
 		movePlayer(clickedTileKey);
 	}
 
 	function movePlayer(destinationKey) {
 		// TODO: send destinationKey to backend, update board layout, then call updateposition()
+        moveToDes(activePiece,destinationKey)
+
     	//updatePieceLoc(newLocObj)
-        updateposition()
+        getallposition()
 		console.log('Moving player to', destinationKey);
 	}
 

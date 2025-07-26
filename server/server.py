@@ -8,6 +8,8 @@ import json
 import random
 
 from gameinstance import GameInstance
+from gamehelperfunct import poskeyTolist
+
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
 gameSession = {}
@@ -59,6 +61,10 @@ class Server:
 
         self.app.add_url_rule(
             "/getvalidmove", "getvalidmove", self.getvalidmove, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/moveToDes", "moveToDes", self.moveToDes, methods=["POST"]
         )
 
         self.app.add_url_rule(
@@ -124,21 +130,23 @@ class Server:
         print(f'{type(valid_list)}, {valid_list}',flush=True)
         return jsonify(
             {
-                'validSq': valid_list,
+                'valid_list': valid_list,
                 'msg': 'get valid square success',
             }
         )    
     
-    def playTrun(self):
-        temp = list()
-        status = "true"
-        #some code
-
+    def moveToDes(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        locationKey = content.get('locationKey')
+        tokenPos = poskeyTolist(locationKey)
+        temp = gameSession.get(gameid)
+        print(f'{type(locationKey)}, {locationKey}',flush=True)
+        temp.movePlayer(tid,tokenPos[0],tokenPos[1])
         return jsonify(
             {
-                '': temp,
-                'message': 'player move success',
-                'status': status,
+                'msg': 'player move success',
             }
         )
     
