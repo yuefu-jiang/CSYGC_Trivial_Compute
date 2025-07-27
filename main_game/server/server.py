@@ -8,6 +8,8 @@ import json
 import random
 
 from gameinstance import GameInstance
+from gamehelperfunct import poskeyTolist
+
 # TODO: import more py modules
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
 gameSession = {}
@@ -42,6 +44,50 @@ class Server:
         )
 
         self.app.add_url_rule(
+            "/getboardcolor", "getboardcolor", self.getboardcolor, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getnames", "getnames", self.getnames, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getallpos", "getallpos", self.getallpos, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getqtype", "getqtype", self.getqtype, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getvalidmove", "getvalidmove", self.getvalidmove, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getallWedge", "getallWedge", self.getallWedge, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/moveToDes", "moveToDes", self.moveToDes, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/addwedge", "addwedge", self.addwedge, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getSquareType", "getSquareType", self.getSquareType, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getCurrentCat", "getCurrentCat", self.getCurrentCat, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/anyoneWin", "anyoneWin", self.anyoneWin, methods=["POST"]
+        )        
+
+        self.app.add_url_rule(
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
@@ -62,6 +108,22 @@ class Server:
                 'action': True,
             }
         )
+
+    def anyoneWin(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        win_list = temp.getWinlist()
+        print(f'{type(win_list)}, {win_list}',flush=True)
+        Iswin = False
+        if win_list:
+            Iswin = True
+        return jsonify(
+            {
+                'win_list': win_list,
+                'Winstatus': Iswin,
+            }
+        )
     
     def roll(self):
         roll_result = random.randint(1, 6)
@@ -75,16 +137,16 @@ class Server:
             'category': category
         })
     
-
     def initializegametest(self):
         content = request.get_json()
         gameid = content.get('gameid')
         namelist = content.get('namelist',[])
-        q_type = content.get('q_type')
+        q_cat = content.get('q_cat')
+        q_type = len(q_cat)
         b_size = content.get('b_size')
         self.app.logger.info(content)
         newgame=GameInstance()
-        newgame.initialize(gameid,namelist)
+        newgame.initialize(gameid,namelist,q_cat)
         gameSession.update({gameid:newgame})
         print(gameSession, flush=True)
         return jsonify(
@@ -94,7 +156,138 @@ class Server:
             }
         )    
 
+    def getvalidmove(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        steps = content.get('steps')
+        temp = gameSession.get(gameid)
+        valid_list = temp.getValidChoices(tid,steps)
+        print(f'{type(valid_list)}, {valid_list}',flush=True)
+        return jsonify(
+            {
+                'valid_list': valid_list,
+                'msg': 'get valid square success',
+            }
+        )    
     
+    def moveToDes(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        locationKey = content.get('locationKey')
+        tokenPos = poskeyTolist(locationKey)
+        temp = gameSession.get(gameid)
+        print(f'{type(locationKey)}, {locationKey}',flush=True)
+        temp.movePlayer(tid,tokenPos[0],tokenPos[1])
+        return jsonify(
+            {
+                'msg': 'player move success',
+            }
+        )
+    
+    def addwedge(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        qtype = content.get('qtype')
+        temp = gameSession.get(gameid)
+        print(f'!!!!!!!!!!!!!!!!!adding this wedge for this:{qtype}!!!!!!!!!!!!!!!!!!!!!!!',flush=True)
+        temp.updatePlayerWedge(tid,qtype)
+        return jsonify(
+            {
+                'msg': 'player wedge updated',
+            }
+        )
+
+    def getallWedge(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        temp_wedgeDict = temp.getallWedges()
+        return jsonify(
+            {
+                'allwedge': temp_wedgeDict,
+                'msg': 'all player wedge updated',
+            }
+        )
+
+    def getboardcolor(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        color_dict = temp.colordict()
+        return jsonify(
+            {
+                'color': color_dict,
+                'msg': 'get color success',
+            }
+        )    
+
+    def getallpos(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        pos_dict = temp.allcurrentpos()
+        return jsonify(
+            {
+                'pos': pos_dict,
+                'msg': 'get coordinates success',
+            }
+        )    
+
+    def getnames(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        name_list = temp.allnames()
+        return jsonify(
+            {
+                'name': name_list,
+                'msg': 'get names success',
+            }
+        )    
+    
+    def getqtype(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        q_list = temp.q_cat
+        return jsonify(
+            {
+                'qtype': q_list,
+                'msg': 'get question type success',
+            }
+        )         
+
+    def getSquareType(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        temp = gameSession.get(gameid)
+        squaretype = temp.getSquareType(tid)
+        print(f'current square type: -----------------{squaretype}',flush=True)
+        return jsonify(
+            {
+                'sqtype': squaretype,
+                'msg': 'get square type success',
+            }
+        ) 
+
+    def getCurrentCat(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        temp = gameSession.get(gameid)
+        Cat = temp.getCat(tid)
+        print(f'current question type: -----------------{Cat}',flush=True)
+        return jsonify(
+            {
+                'category': Cat,
+                'msg': 'get question type success',
+            }
+        ) 
+
     def return_question(self, category, qid, mark_used=False):
         try:
             with open(QUESTION_FILE, 'r') as f:
