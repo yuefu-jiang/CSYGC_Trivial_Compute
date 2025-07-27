@@ -3,14 +3,17 @@
 	import Counter from "./Counter.svelte"
 	import { writable } from 'svelte/store';
 	import { activeqID } from '../session_store.js'
-	import { activeSession } from '../session_store.js'
+	import { activeSession, playerResponse, selectedCat } from '../session_store.js'
  	import Tile from './Tile.svelte';
 	import { onMount } from 'svelte';
 	import Dice from './Dice.svelte';
 	import Overlay from './Overlay.svelte';
 	import QuestionModal from './QuestionModal.svelte';
 
+
 	let showOverlayDice = false;
+	let showCatOverlay = false;
+
 
 	export let sessionID;
 
@@ -43,6 +46,7 @@
 		getnames();
 		getq();
 		initPlayerWedges();
+		getallWedge(); // to display wedge at startup
 		updateGridSize();
 		resizeObserver = new ResizeObserver(updateGridSize);
 		if (containerRef) resizeObserver.observe(containerRef);
@@ -100,11 +104,15 @@
 	let winlist = [];
 	//state of current player winning eligbility
 	let ActiveplayerCanWin = false;
+	// boolean var to store player answer. Updated by handleAnswered(evt)
+	let currentPlayerAnswer = false;
 
 	// Question popup variables ---------------------------------
 	let showQuestionModal = false;
 	let modalQuestion = "";
 	let modalAnswer = "";
+	let constested = writable(false);
+	let gameWon = writable(false);
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -273,6 +281,7 @@
 			tid: tid,
 			steps: steps,
 		};
+
 		console.log('getting valid move: ', sessionID)
 
         const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getvalidmove`, {
@@ -410,52 +419,8 @@
 		const result = await initialize_response.json();
 		Iswin = result.Winstatus;
         winlist = result.win_list;
-        console.log('winning list retrieved');
+        console.log('winning list retrieved', winlist);
     }
-
-	/*const inverseDictColor = {
-	    "0,1": "#1f77b4",
-	    "0,5": "#1f77b4",
-	    "1,4": "#1f77b4",
-	    "2,8": "#1f77b4",
-	    "4,0": "#1f77b4",
-	    "4,6": "#1f77b4",
-	    "5,4": "#1f77b4",
-	    "6,8": "#1f77b4",
-	    "8,1": "#1f77b4",
-	    "8,5": "#1f77b4",
-	    "0,2": "#ff7f0e",
-	    "0,6": "#ff7f0e",
-	    "2,4": "#ff7f0e",
-	    "3,0": "#ff7f0e",
-	    "3,8": "#ff7f0e",
-	    "4,1": "#ff7f0e",
-	    "4,5": "#ff7f0e",
-	    "7,0": "#ff7f0e",
-	    "7,8": "#ff7f0e",
-	    "8,4": "#ff7f0e",
-	    "0,3": "#2ca02c",
-	    "0,7": "#2ca02c",
-	    "2,0": "#2ca02c",
-	    "3,4": "#2ca02c",
-	    "4,2": "#2ca02c",
-	    "4,8": "#2ca02c",
-	    "6,0": "#2ca02c",
-	    "7,4": "#2ca02c",
-	    "8,3": "#2ca02c",
-	    "8,7": "#2ca02c",
-	    "0,4": "#d62728",
-	    "1,0": "#d62728",
-	    "1,8": "#d62728",
-	    "4,3": "#d62728",
-	    "4,7": "#d62728",
-	    "5,0": "#d62728",
-	    "5,8": "#d62728",
-	    "6,4": "#d62728",
-	    "8,2": "#d62728",
-	    "8,6": "#d62728"
-	}
-    */
 
 	// reactive statement
 	// This will monitor changes on piece pos change
@@ -570,45 +535,61 @@
         if (temp_type === "HQ") {
 			//get the question type of the square
 			let temp_cat = await getCurrentCat(activePiece);
-			let answercorrect = false;
+			await openQuestionModal(temp_cat);
+			//let answercorrect = currentPlayerAnswer;
 		    // fetch question and answer, using the category variable
         
 			// temporarily assume correct for game testing
-			answercorrect = true;
+			//answercorrect = true;
 		    // if correct, update wedges, using the category variable
-			if (answercorrect){
+		    const isCorrect = await waitForUserAnswer();
+		    console.log(isCorrect)
+			if (isCorrect){
 				await addwedge(activePiece,temp_cat);
 			}
-			//next player
-			activePiece = await (activePiece+1)%players.length;
+			//revert to false
+			currentPlayerAnswer = false;	
 		}
 		else if (temp_type === "NL"){
 			//get the question type of the square
-			let temp_cat = await getCurrentCat(activePiece);
-			let answercorrect = false;
-		    // fetch question and answer, using the category variable
-        
 
-		    // if incorrect, update activepiece
-			if (!answercorrect){
-				activePiece = await (activePiece+1)%players.length;
-			}
+			let temp_cat = await getCurrentCat(activePiece);
+			await openQuestionModal(temp_cat);
+
 		}
 		else if (temp_type === "CT"){
+
+			//prompt user to pick question type and update category variable
+			//temp_cat e.g. Math
+			//showCatOverlay = true; //question handled in handle
+
+			//$selectedCat = '';
 			//update the list of players who has all 4 wedges
 			await anyoneCanWin();
 			ActiveplayerCanWin = false;
-			if (winlist.includes(activePiece)){
-			//Iswin = true when winlist is not empty, updated by anyoneCanWin()
-			// check if the winner player id inside the list, if yes, store winning possible states
-			ActiveplayerCanWin = true;
+			playerTiles[players[activePiece]]
+
+			const colorExists = playerTiles[players[activePiece]].some(tile => tile.tileColor === "#000000");
+
+			console.log(colorExists)
+
+			if (!colorExists) {
+				ActiveplayerCanWin = true;
+				$constested = true;
+				showCatOverlay = true;
+			} else {
+				showCatOverlay = true; //question handled in handle
 			}
-			//prompt user to pick question type and update category variable
-			//temp_cat e.g. Math
 
 
-			let temp_cat = 'Math';
-			let answercorrect = false;
+			// temp frontend fix
+
+			// if (winlist.includes(activePiece)){
+			// //Iswin = true when winlist is not empty, updated by anyoneCanWin()
+			// // check if the winner player id inside the list, if yes, store winning possible states
+			// 	ActiveplayerCanWin = true;
+			// }
+
 		    // fetch question and answer, using the category variable
 			// then update the answercorrect
 			
@@ -616,23 +597,24 @@
 		    // if correct, and ActiveplayerCanWin=true,player win.
 			// if correct, and ActiveplayerCanWin=false, update wedges, using the category variable
 			// if not correct, nothing happen, next player
-			if (answercorrect && ActiveplayerCanWin){
+			if ($playerResponse == true && ActiveplayerCanWin){
 				//display winning msg
 				//end the game
 
+				console.log(players[activePiece], ' wins!')
 
 			}
-			else if(answercorrect && !ActiveplayerCanWin)
-			{
-				//add the wedges and next player
-				await addwedge(activePiece,temp_cat);
-				activePiece = await (activePiece+1)%players.length;
-			}
-			else if(!answercorrect && !ActiveplayerCanWin)
-			{
-				//next player
-				activePiece = await (activePiece+1)%players.length;
-			}
+			// else if(answercorrect && !ActiveplayerCanWin)
+			// {
+			// 	//add the wedges and next player
+			// 	//await addwedge(activePiece,temp_cat);
+			// 	activePiece = await (activePiece+1)%players.length;
+			// }
+			// else if(!answercorrect && !ActiveplayerCanWin)
+			// {
+			// 	//next player
+			// 	activePiece = await (activePiece+1)%players.length;
+			// }
 			
 		}
 		// update the display of player wedges
@@ -645,16 +627,25 @@
 	async function movePlayer(destinationKey) {
 		// TODO: send destinationKey to backend, update board layout, then call updateposition()
         await moveToDes(activePiece,destinationKey)
+        console.log(activePiece, destinationKey)
 
     	//updatePieceLoc(newLocObj)
 		console.log('Moving player to', destinationKey);
 	}
-
+	// to remove a used question from session store
+	function removeElement(category, qid) {
+	    activeSession.update(current => {
+	        // Create a new object with the updated array
+	        return {
+	            ...current,
+	            [category]: current[category].filter(item => item !== qid)
+	        };
+	    });
+	}
 	/**
 	 * Function to open question modal
 	 */
-	async function openQuestionModal() {
-		//** TODO: change how questions category and qid is selected */*/
+	async function openQuestionModal(category) {
 		const currCatQlist = [...$activeSession[category]];
 		const qid = getRandomItem(currCatQlist);
 		const backendPort = window.api.getBackendPort();
@@ -665,17 +656,51 @@
 			modalAnswer = result.data.answer;
 			showQuestionModal = true;
 			console.log("Fetched Q&A:", result.data);
+			removeElement(category, qid)
+			// to remove question to avoid redundancy
+			console.log($activeSession)
+			return 
 		} catch (err) {
 			console.error("Failed to fetch question:", err);
 		}
 	}
-	/**
-	 * event handler for result of question modal popup
-	 * event.detail.wasCorrect will be true if player answered correctly and false if not
-	*/
+
+	let resolveUserAnswer; // Stores the Promise resolver
+
+	// Function that returns a Promise waiting for the user's answer
+	function waitForUserAnswer() {
+		return new Promise((resolve) => {
+			resolveUserAnswer = resolve; // Save the resolver for later
+		});
+	}
 	function handleAnswered(event) {
-		console.log("User got it right?", event.detail.wasCorrect);
-		/** TODO: continue game accordingly */
+		const isCorrect = event.detail.wasCorrect;
+
+		if (!isCorrect) {
+			console.log('Wrong!');
+			activePiece = (activePiece + 1) % players.length;
+			$constested = false;
+		} else {
+			console.log('Right!');
+			if ($constested) {
+				console.log('Somebody Wins!!!');
+				$gameWon = true;
+			}
+		$constested = false;
+		}
+
+		// Resolve the Promise (if it exists)
+		if (resolveUserAnswer) {
+			resolveUserAnswer(isCorrect); 
+			resolveUserAnswer = null; // Clean up
+		}
+	}
+
+	function handleSelectCat(cat){
+		console.log('Selected ', cat)
+		showCatOverlay = false;
+		$selectedCat = cat;
+		openQuestionModal(cat);
 	}
 
 </script>
@@ -695,12 +720,8 @@
 		<div class="items-center justify-between">
 			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
 
-			<button
-				on:click={openQuestionModal}
-				class="p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300"
-			>
-				Show Random Question
-			</button>
+			<button on:click={() => showCatOverlay = true} class="absolute right-4 top-24 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">show cat</button>
+
 
 		<Overlay bind:show={showOverlayDice} >
 			<h2> Dice Roll! </h2>
@@ -712,10 +733,28 @@
 		</Overlay>
 
 
+
+		<Overlay bind:show={showCatOverlay} >
+			<h2> Choose a WINNING category!! </h2>
+			<div class="flex  flex-col">
+				{#each selected_cat as cat}
+					<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectCat(cat)}>
+						{cat}
+					</button>
+				{/each}
+			</div>
+		</Overlay>
+
+		<Overlay bind:show={$gameWon} >
+			<h1> {players[activePiece]} Won!!! </h1>
+		</Overlay>
+
+
 		</div>
 			
 		</div>
-		<h1 class="mt-10 text-3xl font-bold">Trivial Compute!</h1>
+		<h1 class="pt-10  text-3xl font-bold">Trivial Compute!</h1>
+		<h2 class="mt-6 text-xl font-bold"> Active Player: {players[activePiece]} </h2>
 	</section>
 
 	
@@ -739,13 +778,13 @@
 		    			">
 			    <div class="h-1/3 ">
 
-			    		<h2 style=" color: #3b82f6;" > {Object.keys(playerTiles)[0]} </h2>
+			    		<h2 style=" color: #3b82f6;" > {players[0]} </h2>
 			    </div>
 			    <div class="h-2/3 flex items-center justify-center">
 			    	<div class="h-3/4 aspect-square grid relative"
 			    	style={`grid-template-columns: repeat(2, 1fr);`
 					}>
-					    {#each playerTiles[Object.keys(playerTiles)[0]] as ptile}
+					    {#each playerTiles[players[0]] as ptile}
 					        <Tile active={ptile.active} tileColor={ptile.tileColor}/>
 					    {/each}
 			    	</div>
@@ -760,13 +799,13 @@
 		    			">
 			    <div class="h-1/3 ">
 
-			    		<h2 style=" color: #eab308;" > {Object.keys(playerTiles)[1]} </h2>
+			    		<h2 style=" color: #eab308;" > {players[1]} </h2>
 			    </div>
 			    <div class="h-2/3 flex items-center justify-center">
 			    	<div class="h-3/4 aspect-square grid relative"
 			    	style={`grid-template-columns: repeat(2, 1fr);`
 					}>
-					    {#each playerTiles[Object.keys(playerTiles)[1]] as ptile}
+					    {#each playerTiles[players[1]] as ptile}
 					        <Tile active={ptile.active} tileColor={ptile.tileColor}/>
 					    {/each}
 			    	</div>
@@ -781,13 +820,13 @@
 		    			">
 			    <div class="h-1/3 ">
 
-			    		<h2 style=" color: #ef4444;" > {Object.keys(playerTiles)[2]} </h2>
+			    		<h2 style=" color: #ef4444;" > {players[2]} </h2>
 			    </div>
 			    <div class="h-2/3 flex items-center justify-center">
 			    	<div class="h-3/4 aspect-square grid relative"
 			    	style={`grid-template-columns: repeat(2, 1fr);`
 					}>
-					    {#each playerTiles[Object.keys(playerTiles)[2]] as ptile}
+					    {#each playerTiles[players[2]] as ptile}
 					        <Tile active={ptile.active} tileColor={ptile.tileColor}/>
 					    {/each}
 			    	</div>
@@ -803,13 +842,13 @@
 		    			">
 			    <div class="h-1/3 ">
 
-			    		<h2 style=" color: #22c55e;" > {Object.keys(playerTiles)[3]} </h2>
+			    		<h2 style=" color: #22c55e;" > {players[3]} </h2>
 			    </div>
 			    <div class="h-2/3 flex items-center justify-center">
 			    	<div class="h-3/4 aspect-square grid relative"
 			    	style={`grid-template-columns: repeat(2, 1fr);`
 					}>
-					    {#each playerTiles[Object.keys(playerTiles)[3]] as ptile}
+					    {#each playerTiles[players[3]] as ptile}
 					        <Tile active={ptile.active} tileColor={ptile.tileColor}/>
 					    {/each}
 			    	</div>
@@ -821,6 +860,9 @@
 		<div class="aspect-square bg-white-500 border border-gray-400 rounded-sm">
 			<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
 		</div>
+	</section>
+	<section>
+		Place holder for color annotation?
 	</section>
 
 

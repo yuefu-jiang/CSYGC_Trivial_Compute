@@ -265,7 +265,9 @@ class GameInstance:
         """
         temp = list()
         i = 0
+        print(self.tokenlist)
         for i in range(self.playerno):
             if self.tokenlist[i].full:
                 temp.append(i)
             i+=1
+        return temp
