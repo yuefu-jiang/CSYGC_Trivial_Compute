@@ -76,6 +76,7 @@
     //id for current player
 	let activePiece = 0; 
 	//square type of current player
+	// "CT" "NL" "HQ"
 	let activeSq_type;
 	// This is the color dict
     let inverseDictColor = {};
@@ -563,6 +564,7 @@
 			const temp_cat = await getCurrentCat(activePiece);
 		    // fetch question and answer, using the category variable
         
+			const answercorrect = false
 		    // if correct, update wedges, using the category variable
             await addwedge(activePiece,temp_cat);
 			activePiece = await (activePiece+1)%players.length;
@@ -580,23 +582,28 @@
 		}
 		else if (temp_type === "CT"){
 			//prompt user to pick question type and update category variable
-			const temp_cat = await getCurrentCat(activePiece);
+			//temp_cat e.g. Math
+			const temp_cat = 'Math';
 		    // fetch question and answer, using the category variable
-        
+			
+			const answercorrect = false
 		    // if correct, update wedges, using the category variable
-            await addwedge(activePiece,temp_cat);
+            
+			await addwedge(activePiece,temp_cat);
 			activePiece = await (activePiece+1)%players.length;
 		}
 		// update the display of player wedges
 		await updatePlayerWedges();
 		// check winning status
+		// anyoneWin return winning player list:e.g. [1]
         await anyoneWin();
-		if (Iswin){
+		if (Iswin & answercorrect & winlist[0]==activePiece-1 ){
 			//some one win, the global variable winlist will be updated by updatePlayerWedges()
 			// check the winner player id from the list, 
 			// display winning message
 			// end game
 			// pending
+
 
 		}
 	}
