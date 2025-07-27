@@ -73,13 +73,29 @@
 	let question;
 	//let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
 	let players = [];
-	let activePiece = 0; // 
+    //id for current player
+	let activePiece = 0; 
+	//square type of current player
+	let activeSq_type;
 	// This is the color dict
     let inverseDictColor = {};
 	// player position dic
     let piecesPerTile = {};
 	// possible destination after roll dice
 	let possibleDestinations = [];
+    //let selected_cat = ["Geography", "History", "Math", "Computer Science"]
+	// list of all selected question type, get from backend
+	let selected_cat = [];
+    // Precompute tiles
+    let tiles = [];
+	// this is the player collected wedges status
+	// playerTiles["david"]=[{key:'0,0',rol:0,col:0,tileColor:"#000000",active:True},{},{},{}]
+	// each player has four wedges tiles
+    let playerTiles = {};
+	//winning status
+	let Iswin = false;
+	//winner list
+	let winlist = [];
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -156,16 +172,6 @@
 	    '0,2': [3],
     };*/
 
-    // Precompute tiles
-    let tiles = [];
-    let playerTiles = {}
-
-
-    //TEMP: getting from backend?
-    //let selected_cat = ["Geography", "History", "Math", "Computer Science"]
-	//get from parent
-	let selected_cat = [];
-
 	// TODO: get color from backend, run at launch
     async function getcolor() {
 
@@ -228,7 +234,7 @@
         console.log('get name result', msg)
     }
 
-    // get question list from backend, run when called
+    // get a complete question category list from backend, run when called
 	async function getq() {
 		const backendPort = window.api.getBackendPort()
 
@@ -293,16 +299,38 @@
         console.log('move result', msg)
     }
 
-	// update player collected wedges
-	async function addwedge(tid) {
+	// get and update all player wedges displayed
+	async function getallWedge() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting player wedges:', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getallWedge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+        // update the playerTiles object
+		playerTiles = result.allwedge;
+		const msg = result.msg;
+        console.log('update: ', msg)
+    }
+
+	// add a wedge to player collected wedges
+    // need an input of color
+	async function addwedge(tid,qtype) {
 		const backendPort = window.api.getBackendPort()
 
 		const gameinput = {
 			gameid: sessionID,
 			tid: tid,
+			qtype:qtype,
 		};
-		console.log('sending a move on game:', sessionID,' for player', tid)
-
+		console.log('updating color of game:', sessionID,' for player', tid, ' with wedge for type: ', qtype)
         const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/addwedge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -311,6 +339,69 @@
 		const result = await initialize_response.json();
         const msg = result.msg;
         console.log('added result', msg)
+    }
+
+    // get the square type of a current player
+	async function getSquareType(tid) {
+		const backendPort = window.api.getBackendPort()
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+		};
+		console.log('getting square type at game:', sessionID,' for player', tid,)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getSquareType`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		activeSq_type = result.sqtype;
+		console.log('square type got=', activeSq_type)
+        const msg = result.msg;
+        console.log('square type result', msg)
+		return result.sqtype;
+    }
+
+    // get the question type of a current square, using current player as reference and update category
+	async function getCurrentCat(tid) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+		};
+
+		console.log('getting question type at game:', sessionID,' for player', tid,)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getCurrentCat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		category = result.category;
+        const msg = result.msg;
+        console.log('question type result', msg)
+		return result.category;
+    }
+
+    // get the player id who win
+	async function anyoneWin() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+
+		console.log('find anyone win for game:', sessionID)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/anyoneWin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		Iswin = result.Winstatus;
+        winlist = result.win_list;
+        console.log('winning list retrieved');
     }
 
 	/*const inverseDictColor = {
@@ -396,10 +487,14 @@
                 });
             }
         }
-        initPlayerWedges();
-        console.log(playerTiles)
+		console.log(playerTiles)
     }
 
+    // This is to initialize the wedges for each player
+    // TODO: display according to player count
+    function updatePlayerWedges() {
+		getallWedge();
+    }	
     
     // This is to initialize the wedges for each player
     // TODO: display according to player count
@@ -414,6 +509,7 @@
 	                	key,
 	                    row,
 	                    col,
+						tileColor:"#000000",
 	                    active: true,
 	                });
 	            }
@@ -422,58 +518,8 @@
 
     }
 
-    // Method to update the color when a wedge is filled 
-	function updateTileColor(pIndex, row, col, color) {
-	    // Get the player's tiles array
-	    const player = players[pIndex];
-	    const tiles = playerTiles[player];
-
-	    // Find the tile with matching row and col
-	    const tile = tiles.find(t => t.row === row && t.col === col);
-	    
-	    if (tile) {
-	        tile.tileColor = color; // Update the color
-	        console.log(playerTiles)
-	    } else {
-	        console.warn(`Tile not found at (${row}, ${col}) for player ${player}`);
-	    }
-
-	    playerTiles = { ...playerTiles };
-	}
-
     // Function that actually got used by button
     // TODO: hook this with backend return
-    // should be triggered when a player should have a wedge filled
-    function handleWedgeFill(tid,color) {
-    	// this is how to fill a color to a wedge
-    	// updates player 0, row0, col 0 to yellow
-    	updateTileColor(0, 0,0, '#ff7f0e')
-    	//updates player 2, row0, col 1 to green
-    	updateTileColor(3, 0,1, '#2ca02c')
-
-    	
-    }
-
-    // method that MOVES the piece
-	/*
-    function updatePieceLoc(newLocObj) {
-    	piecesPerTile = newLocObj;
-    	piecesPerTile = { ...piecesPerTile };
-	
-    }
-
-    // Function that handles the data of piece moves
-    // TODO: hook with backend returns
-
-	function handlePieceMove() {
-    	// should get this from backend
-    	const newLocObj = {
-    		'8,8': [0,1,3],
-    		'8,1': [2]
-    	}
-    	updatePieceLoc(newLocObj)
-    }
-    */
 
 	function handleRolled(event) {
 		let lastRollResult = null;
@@ -483,16 +529,7 @@
 		// TODO: get the next piece position
 		// This can be done by returning the roll result to backend
 		getvalidmove(activePiece,lastRollResult.roll);
-		// TEST: move piece 0 by 5 to the right
 
-		// this should be returned by backend server
-		/*const newLocObj = {
-	    	'0,1': [1,2],
-	    	'0,2': [3],
-	    	'0,4': [0],
-    	}
-		*/
-    	//updatePieceLoc(newLocObj)
 	}
 
 
@@ -507,17 +544,61 @@
 		}
 	}
 
-	//let possibleDestinations = ['0,3', '0,5'];
-
-	function handleTileClick(event) {
+	async function handleTileClick(event) {
 		// The key is available in event.detail.key
 		const clickedTileKey = event.detail.key;
 		console.log('Selected tile:', clickedTileKey);
         //The key is in format str: 0,2
 		// Do something with the key, like move a player piece
-		movePlayer(clickedTileKey);
-        possibleDestinations = []
-		getallposition()
+		await movePlayer(clickedTileKey);
+        // clear lighting
+		possibleDestinations = [];
+		// update all player position
+		await getallposition();
+		// get the current type of squares from backend for current player
+        const temp_type = await getSquareType(activePiece);
+		// 1) Roll again->nothing, 2) normal & hq ->get question type, 3) center-->pick question type
+        if (temp_type === "HQ") {
+			//get the question type of the square
+			const temp_cat = await getCurrentCat(activePiece);
+		    // fetch question and answer, using the category variable
+        
+		    // if correct, update wedges, using the category variable
+            await addwedge(activePiece,temp_cat);
+			activePiece = await (activePiece+1)%players.length;
+		}
+		else if (temp_type === "NL"){
+			//get the question type of the square
+			const temp_cat = await getCurrentCat(activePiece);
+		    // fetch question and answer, using the category variable
+        
+			const answercorrect = false
+		    // if incorrect, update activepiece
+			if (!answercorrect){
+				activePiece = await (activePiece+1)%players.length;
+			}
+		}
+		else if (temp_type === "CT"){
+			//prompt user to pick question type and update category variable
+			const temp_cat = await getCurrentCat(activePiece);
+		    // fetch question and answer, using the category variable
+        
+		    // if correct, update wedges, using the category variable
+            await addwedge(activePiece,temp_cat);
+			activePiece = await (activePiece+1)%players.length;
+		}
+		// update the display of player wedges
+		await updatePlayerWedges();
+		// check winning status
+        await anyoneWin();
+		if (Iswin){
+			//some one win, the global variable winlist will be updated by updatePlayerWedges()
+			// check the winner player id from the list, 
+			// display winning message
+			// end game
+			// pending
+
+		}
 	}
 
 	function movePlayer(destinationKey) {

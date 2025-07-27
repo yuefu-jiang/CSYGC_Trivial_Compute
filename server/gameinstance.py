@@ -57,8 +57,10 @@ class GameInstance:
         #add a token for all players
         i = 0
         while i < self.playerno:
-            self.tokenlist.append(Token(self.wedgelist))
+            temp = Token(self.wedgelist)
+            self.tokenlist.append(temp)
             i+=1
+            print(f'----------------{self.wedgelist}-------------!!!!!!!!!!!!!')
         #initialize all tokens, store name, put all token at center
         i = 0
         while i < len(self.tokenlist):
@@ -103,6 +105,7 @@ class GameInstance:
     def colordict(self)->dict:
         """return a dict of colors for board coloring"""
         temp = dict()
+        i = 0
         for i in range(self.boardsize):
             for j in range(self.boardsize):
                 temp.update({str(i)+","+str(j):self.gboard.board[i][j].color})
@@ -129,6 +132,40 @@ class GameInstance:
                 temp.update({temp_pos:[i]})
             else:
                 temp[temp_pos].append(i)
+            i+=1
+        return temp
+
+    def getallWedges(self)->dict:
+        """
+        return: a dict of all player wedges properties in following format for frontend processing
+        {
+        "david":[{key:'0,0',rol:0,col:0,tileColor:"#000000",active:True},{},{},{}]
+        rol & col is not coordinates of player, but the grid coordinates of the wedge display in frontend
+        current 2*2 matrix
+        ...
+        }
+        """
+        temp = dict()
+        i = 0
+        for i in range(self.playerno):
+            temp_p = []
+            wedgeID = 0
+            ii = 0
+            for ii in range(2):
+                jj = 0
+                for jj in range(2):
+                    temp_color = "#000000"
+                    print(f'{self.tokenlist[i].tokenWedge[wedgeID][3]}',flush=True)
+                    if self.tokenlist[i].tokenWedge[wedgeID][3]:
+                        temp_color = self.tokenlist[i].tokenWedge[wedgeID][1]
+                    temp_p.append({'key':posConvert([ii,jj]),'rol':ii,'col':jj,
+                                   'tileColor':temp_color,'active':True})
+                    wedgeID+=1
+                    jj+=1
+                ii+=1
+            print(f'++++++++++++++++++++++++getting player wedges, now at player {i}++++++++++++++++++++++', flush=True)
+            print(f'+++++++appending {temp_p}++++++++++++++++++++++', flush=True)
+            temp.update({self.tokenlist[i].label:temp_p})
             i+=1
         return temp
 
@@ -194,19 +231,41 @@ class GameInstance:
         """
         self.tokenlist[tid].moveto(i,j)
 
-    def updatePlayerWedge(self, tid: int):
+    def updatePlayerWedge(self, tid: int, qtype: str):
         """
         :param tid: id number of player (0/1/2....)
-        :parem color: color of wedge
+        :parem qtype: type of question for wedge
         """
-        row = self.tokenlist[tid].row
-        col = self.tokenlist[tid].col
-        self.tokenlist[tid].collectupdate(self.colorIdof(self.gboard.board[row][col].color))
+        qID = self.catIdof(qtype)
+        print(f'@@@@@@@@@@@the wedge/QQQ id is {qID}@@@@@@@@@@@@@@@')
+        self.tokenlist[tid].collectupdate(qID)
         
-        
-    def correctAnswer(self, tid: int, cat:str):
+    def getSquareType(self, tid:int)->str:
         """
         :param tid: id number of player (0/1/2....)
-        :parem cat: category of question
+        return the square type of the current position of player with tid
         """
-        
+        position = self.tokenlist[tid].position()
+        SquareType = self.gboard.board[position[0]][position[1]].cat
+        return SquareType
+
+    def getCat(self, tid:int)->str:
+        """
+        :param tid: id number of player (0/1/2....)
+        return the question type of the current position of player with tid
+        """
+        position = self.tokenlist[tid].position()
+        colorid = self.colorIdof(self.gboard.board[position[0]][position[1]].color)
+        category=self.q_cat[colorid]
+        return category
+
+    def getWinlist(self)->list:
+        """
+        return the list of winning player
+        """
+        temp = list()
+        i = 0
+        for i in range(self.playerno):
+            if self.tokenlist[i].full:
+                temp.append(i)
+            i+=1

@@ -64,12 +64,28 @@ class Server:
         )
 
         self.app.add_url_rule(
+            "/getallWedge", "getallWedge", self.getallWedge, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
             "/moveToDes", "moveToDes", self.moveToDes, methods=["POST"]
         )
 
         self.app.add_url_rule(
             "/addwedge", "addwedge", self.addwedge, methods=["POST"]
         )
+
+        self.app.add_url_rule(
+            "/getSquareType", "getSquareType", self.getSquareType, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/getCurrentCat", "getCurrentCat", self.getCurrentCat, methods=["POST"]
+        )
+
+        self.app.add_url_rule(
+            "/anyoneWin", "anyoneWin", self.anyoneWin, methods=["POST"]
+        )        
 
         self.app.add_url_rule(
             "/roll", "roll", self.roll, methods=["POST"]
@@ -90,6 +106,22 @@ class Server:
             {
                 'data': 'Message in a bottle: \nHello from Python! ',
                 'action': True,
+            }
+        )
+
+    def anyoneWin(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        win_list = temp.getWinlist()
+        print(f'{type(win_list)}, {win_list}',flush=True)
+        Iswin = False
+        if win_list:
+            Iswin = True
+        return jsonify(
+            {
+                'win_list': win_list,
+                'Winstatus': Iswin,
             }
         )
     
@@ -158,23 +190,25 @@ class Server:
         content = request.get_json()
         gameid = content.get('gameid')
         tid = content.get('tid')
+        qtype = content.get('qtype')
         temp = gameSession.get(gameid)
-        temp.updatePlayerWedge(tid)
+        print(f'!!!!!!!!!!!!!!!!!adding this wedge for this:{qtype}!!!!!!!!!!!!!!!!!!!!!!!',flush=True)
+        temp.updatePlayerWedge(tid,qtype)
         return jsonify(
             {
                 'msg': 'player wedge updated',
             }
         )
 
-    def correctAnswer(self):
-        score = 0
-        isWinner = False
-        #some code
-
+    def getallWedge(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        temp_wedgeDict = temp.getallWedges()
         return jsonify(
             {
-                'score': score,
-                'winner': isWinner
+                'allwedge': temp_wedgeDict,
+                'msg': 'all player wedge updated',
             }
         )
 
@@ -225,6 +259,34 @@ class Server:
                 'msg': 'get question type success',
             }
         )         
+
+    def getSquareType(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        temp = gameSession.get(gameid)
+        squaretype = temp.getSquareType(tid)
+        print(f'current square type: -----------------{squaretype}',flush=True)
+        return jsonify(
+            {
+                'sqtype': squaretype,
+                'msg': 'get square type success',
+            }
+        ) 
+
+    def getCurrentCat(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        tid = content.get('tid')
+        temp = gameSession.get(gameid)
+        Cat = temp.getCat(tid)
+        print(f'current question type: -----------------{Cat}',flush=True)
+        return jsonify(
+            {
+                'category': Cat,
+                'msg': 'get question type success',
+            }
+        ) 
 
     def return_question(self, category, qid, mark_used=False):
         try:

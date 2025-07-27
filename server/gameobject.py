@@ -1,3 +1,5 @@
+import copy
+
 class Wedge:
     def __init__(self, in_size: int):
         """
@@ -11,7 +13,7 @@ class Wedge:
             self.chosen.add(wedgeset[i])
 
 class Token:
-    def __init__(self, wedge: list):
+    def __init__(self, input_wedge: list):
         """
         This class implement a token object
         wedge list input is like:
@@ -20,13 +22,15 @@ class Token:
         self.label =""
         self.row = -1
         self.col = -1
-        self.wedge = wedge.copy()
+        self.tokenWedge = copy.deepcopy(input_wedge)
         self.score = 0
         self.HqOk = True
         self.CenterOk = True
         self.full = False
-        for i in range(len(self.wedge)):
-            self.wedge[i].append(False)
+        for i in range(len(self.tokenWedge)):
+            self.tokenWedge[i].append(False)
+            i+=1
+        print(f'+++++++++++++++++{self.tokenWedge}++++++++++++++',flush=True)
 
     def position(self)->list:
         return list([self.row,self.col])
@@ -36,14 +40,14 @@ class Token:
         self.col=j
 
     def collectupdate(self, item: int):
-        if not self.wedge[item][-1]:
-            self.wedge[item][-1] = True
+        if not self.tokenWedge[item][-1]:
+            self.tokenWedge[item][-1] = True
             self.score +=1
         self.updatefull()
     
     def updatefull(self):
-        for i in range(len(self.wedge)):
-            if not self.wedge[i][-1]:
+        for i in range(len(self.tokenWedge)):
+            if not self.tokenWedge[i][-1]:
                 return
             i+=1
         self.full = True
