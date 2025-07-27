@@ -862,7 +862,7 @@
 		</div>
 	</section>
 	<section>
-		hjjdh
+		Place holder for color annotation?
 	</section>
 
 
