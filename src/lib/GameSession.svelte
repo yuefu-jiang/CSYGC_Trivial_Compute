@@ -95,8 +95,10 @@
     let playerTiles = {};
 	//winning status
 	let Iswin = false;
-	//winner list
+	//winning possible player list
 	let winlist = [];
+	//state of current player winning eligbility
+	let ActiveplayerCanWin = false;
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -385,8 +387,8 @@
 		return result.category;
     }
 
-    // get the player id who win
-	async function anyoneWin() {
+    // update the list of winning eligible player list:e.g. [0,1]
+	async function anyoneCanWin() {
 		const backendPort = window.api.getBackendPort()
 
 		const gameinput = {
@@ -557,60 +559,86 @@
 		// update all player position
 		await getallposition();
 		// get the current type of squares from backend for current player
-        const temp_type = await getSquareType(activePiece);
+        let temp_type = await getSquareType(activePiece);
 		// 1) Roll again->nothing, 2) normal & hq ->get question type, 3) center-->pick question type
         if (temp_type === "HQ") {
 			//get the question type of the square
-			const temp_cat = await getCurrentCat(activePiece);
+			let temp_cat = await getCurrentCat(activePiece);
+			let answercorrect = false;
 		    // fetch question and answer, using the category variable
         
-			const answercorrect = false
+			// temporarily assume correct for game testing
+			answercorrect = true;
 		    // if correct, update wedges, using the category variable
-            await addwedge(activePiece,temp_cat);
+			if (answercorrect){
+				await addwedge(activePiece,temp_cat);
+			}
+			//next player
 			activePiece = await (activePiece+1)%players.length;
 		}
 		else if (temp_type === "NL"){
 			//get the question type of the square
-			const temp_cat = await getCurrentCat(activePiece);
+			let temp_cat = await getCurrentCat(activePiece);
+			let answercorrect = false;
 		    // fetch question and answer, using the category variable
         
-			const answercorrect = false
+
 		    // if incorrect, update activepiece
 			if (!answercorrect){
 				activePiece = await (activePiece+1)%players.length;
 			}
 		}
 		else if (temp_type === "CT"){
+			//update the list of players who has all 4 wedges
+			await anyoneCanWin();
+			ActiveplayerCanWin = false;
+			if (winlist.includes(activePiece)){
+			//Iswin = true when winlist is not empty, updated by anyoneCanWin()
+			// check if the winner player id inside the list, if yes, store winning possible states
+			ActiveplayerCanWin = true;
+			}
 			//prompt user to pick question type and update category variable
 			//temp_cat e.g. Math
-			const temp_cat = 'Math';
+
+
+			let temp_cat = 'Math';
+			let answercorrect = false;
 		    // fetch question and answer, using the category variable
+			// then update the answercorrect
 			
-			const answercorrect = false
-		    // if correct, update wedges, using the category variable
-            
-			await addwedge(activePiece,temp_cat);
-			activePiece = await (activePiece+1)%players.length;
+
+		    // if correct, and ActiveplayerCanWin=true,player win.
+			// if correct, and ActiveplayerCanWin=false, update wedges, using the category variable
+			// if not correct, nothing happen, next player
+			if (answercorrect && ActiveplayerCanWin){
+				//display winning msg
+				//end the game
+
+
+			}
+			else if(answercorrect && !ActiveplayerCanWin)
+			{
+				//add the wedges and next player
+				await addwedge(activePiece,temp_cat);
+				activePiece = await (activePiece+1)%players.length;
+			}
+			else if(!answercorrect && !ActiveplayerCanWin)
+			{
+				//next player
+				activePiece = await (activePiece+1)%players.length;
+			}
+			
 		}
 		// update the display of player wedges
 		await updatePlayerWedges();
 		// check winning status
-		// anyoneWin return winning player list:e.g. [1]
-        await anyoneWin();
-		if (Iswin & answercorrect & winlist[0]==activePiece-1 ){
-			//some one win, the global variable winlist will be updated by updatePlayerWedges()
-			// check the winner player id from the list, 
-			// display winning message
-			// end game
-			// pending
-
-
-		}
+		// anyoneCanWin update the list of winning eligible player list:e.g. [0,1]
+        await anyoneCanWin();
 	}
 
-	function movePlayer(destinationKey) {
+	async function movePlayer(destinationKey) {
 		// TODO: send destinationKey to backend, update board layout, then call updateposition()
-        moveToDes(activePiece,destinationKey)
+        await moveToDes(activePiece,destinationKey)
 
     	//updatePieceLoc(newLocObj)
 		console.log('Moving player to', destinationKey);
