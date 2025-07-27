@@ -270,3 +270,4 @@ class GameInstance:
             if self.tokenlist[i].full:
                 temp.append(i)
             i+=1
+        return temp
