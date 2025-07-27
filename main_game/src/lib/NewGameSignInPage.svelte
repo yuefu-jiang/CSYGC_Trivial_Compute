@@ -134,7 +134,8 @@
 		const gameinput = {
 			gameid: newSessionID,
 			namelist: playerNames,
-			q_type: 4,
+            q_cat:selectedCategoriesList,
+			//q_type: 4,
 			b_size: 9,
 		};
 		

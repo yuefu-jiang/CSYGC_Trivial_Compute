@@ -18,8 +18,7 @@
 	let showQuestionModal = false;
 	let modalQuestion = "";
 	let modalAnswer = "";
-	// -----------------------------------------------------
-	
+
 	onMount(async () => {
 		const hash = window.location.hash;
 		const params = new URLSearchParams(hash.split('?')[1]);
@@ -44,6 +43,10 @@
 			return updated;
 		});
 		console.log('Started session:', sessionID)
+		getcolor();
+		getallposition();
+		getnames();
+		getq();
 		initPlayerWedges();
 		updateGridSize();
 		resizeObserver = new ResizeObserver(updateGridSize);
@@ -51,6 +54,34 @@
 
 	});
 
+	/**
+	 * Function to open question modal
+	 */
+	async function openQuestionModal() {
+		//** TODO: change how questions category and qid is selected */*/
+		const currCatQlist = [...$activeSession[category]];
+		const qid = getRandomItem(currCatQlist);
+		const backendPort = window.api.getBackendPort();
+		try {
+			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
+			const result = await res.json();
+			modalQuestion = result.data.question;
+			modalAnswer = result.data.answer;
+			showQuestionModal = true;
+			console.log("Fetched Q&A:", result.data);
+		} catch (err) {
+			console.error("Failed to fetch question:", err);
+		}
+	}
+	/**
+	 * event handler for result of question modal popup
+	 * event.detail.wasCorrect will be true if player answered correctly and false if not
+	*/
+	
+	function handleAnswered(event) {
+		console.log("User got it right?", event.detail.wasCorrect);
+		/** TODO: continue game accordingly */
+	}
 	function updateGridSize() {
 		if (containerRef) {
 	        const containerWidth = containerRef.offsetWidth;
@@ -74,9 +105,32 @@
 	let category ='science'; // TEMP: fix at science for now
 	let qid;
 	let question;
-	let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
-	let activePiece = 0; // 
-
+	//let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
+	let players = [];
+    //id for current player
+	let activePiece = 0; 
+	//square type of current player
+	// "CT" "NL" "HQ"
+	let activeSq_type;
+	// This is the color dict
+    let inverseDictColor = {};
+	// player position dic
+    let piecesPerTile = {};
+	// possible destination after roll dice
+	let possibleDestinations = [];
+    //let selected_cat = ["Geography", "History", "Math", "Computer Science"]
+	// list of all selected question type, get from backend
+	let selected_cat = [];
+    // Precompute tiles
+    let tiles = [];
+	// this is the player collected wedges status
+	// playerTiles["david"]=[{key:'0,0',rol:0,col:0,tileColor:"#000000",active:True},{},{},{}]
+	// each player has four wedges tiles
+    let playerTiles = {};
+	//winning status
+	let Iswin = false;
+	//winner list
+	let winlist = [];
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -148,51 +202,244 @@
     // player 0 = blue, 1 = yellow, 2 = red, 3 = green
     // This is the initial dictionary to update. 
     // TODO: fetch the init pos from backend
-    let piecesPerTile = {
+    /*let piecesPerTile = {
 	    '0,1': [0,1,2],
 	    '0,2': [3],
-    };
+    };*/
 
-	/**
-	 * Function to open question modal
-	 */
-	async function openQuestionModal() {
-		//** TODO: change how questions category and qid is selected */*/
-		const currCatQlist = [...$activeSession[category]];
-		const qid = getRandomItem(currCatQlist);
-		const backendPort = window.api.getBackendPort();
-		try {
-			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
-			const result = await res.json();
-			modalQuestion = result.data.question;
-			modalAnswer = result.data.answer;
-			showQuestionModal = true;
-			console.log("Fetched Q&A:", result.data);
-		} catch (err) {
-			console.error("Failed to fetch question:", err);
-		}
-	}
+	// TODO: get color from backend, run at launch
+    async function getcolor() {
 
-	/**
-	 * event handler for result of question modal popup
-	 * event.detail.wasCorrect will be true if player answered correctly and false if not
-	*/
-	function handleAnswered(event) {
-		console.log("User got it right?", event.detail.wasCorrect);
-		/** TODO: continue game accordingly */
-	}
+        const backendPort = window.api.getBackendPort()
 
-    // Precompute tiles
-    let tiles = [];
-    let playerTiles = {}
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting color with session: ', sessionID)
+		//route to get color
+		console.log("getting board color grid", backendPort)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getboardcolor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		inverseDictColor = result.color;
+        const msg = result.msg;
+        console.log('get color result', msg)
+    }
+    // update current position of all players from backend, run when called
+	async function getallposition() {
+		const backendPort = window.api.getBackendPort()
 
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting position: ', sessionID)
 
-    //TEMP: getting from backend?
-    let selected_cat = ["Geography", "History", "Math", "Computer Science"]
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getallpos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		piecesPerTile = result.pos;
+        const msg = result.msg;
+        console.log('get pos result', msg)
+    }
 
-	// This is the color dict
-	// TODO: get this from backend
-	const inverseDictColor = {
+    // get namelist of all players from backend, run when called
+	async function getnames() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting names: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getnames`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		players = result.name;
+		console.log('names: ', players)
+        const msg = result.msg;
+        console.log('get name result', msg)
+    }
+
+    // get a complete question category list from backend, run when called
+	async function getq() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting question: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getqtype`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		selected_cat = result.qtype;
+		console.log('question types', selected_cat)
+        const msg = result.msg;
+        console.log('get question result', msg)
+    }
+
+    // get valid position list from backend, run when called
+	async function getvalidmove(tid,steps) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+			steps: steps,
+		};
+		console.log('getting valid move: ', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getvalidmove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		possibleDestinations = result.valid_list;
+		console.log('valid move', possibleDestinations)
+        const msg = result.msg;
+        console.log('get valid move result', msg)
+    }
+
+	// move a player in backend
+	async function moveToDes(tid,locationKey) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+			locationKey: locationKey,
+		};
+		console.log('sending a move on game:', sessionID,' for player', tid)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/moveToDes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+        const msg = result.msg;
+        console.log('move result', msg)
+    }
+
+	// get and update all player wedges displayed
+	async function getallWedge() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+		console.log('getting player wedges:', sessionID)
+
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getallWedge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+        // update the playerTiles object
+		playerTiles = result.allwedge;
+		const msg = result.msg;
+        console.log('update: ', msg)
+    }
+
+	// add a wedge to player collected wedges
+    // need an input of color
+	async function addwedge(tid,qtype) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+			qtype:qtype,
+		};
+		console.log('updating color of game:', sessionID,' for player', tid, ' with wedge for type: ', qtype)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/addwedge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+        const msg = result.msg;
+        console.log('added result', msg)
+    }
+
+    // get the square type of a current player
+	async function getSquareType(tid) {
+		const backendPort = window.api.getBackendPort()
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+		};
+		console.log('getting square type at game:', sessionID,' for player', tid,)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getSquareType`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		activeSq_type = result.sqtype;
+		console.log('square type got=', activeSq_type)
+        const msg = result.msg;
+        console.log('square type result', msg)
+		return result.sqtype;
+    }
+
+    // get the question type of a current square, using current player as reference and update category
+	async function getCurrentCat(tid) {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+			tid: tid,
+		};
+
+		console.log('getting question type at game:', sessionID,' for player', tid,)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/getCurrentCat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		category = result.category;
+        const msg = result.msg;
+        console.log('question type result', msg)
+		return result.category;
+    }
+
+    // get the player id who win
+	async function anyoneWin() {
+		const backendPort = window.api.getBackendPort()
+
+		const gameinput = {
+			gameid: sessionID,
+		};
+
+		console.log('find anyone win for game:', sessionID)
+        const initialize_response = await fetch(`http://127.0.0.1:${backendPort}/anyoneWin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gameinput)
+        });
+		const result = await initialize_response.json();
+		Iswin = result.Winstatus;
+        winlist = result.win_list;
+        console.log('winning list retrieved');
+    }
+
+	/*const inverseDictColor = {
 	    "0,1": "#1f77b4",
 	    "0,5": "#1f77b4",
 	    "1,4": "#1f77b4",
@@ -234,6 +481,7 @@
 	    "8,2": "#d62728",
 	    "8,6": "#d62728"
 	}
+    */
 
 	// reactive statement
 	// This will monitor changes on piece pos change
@@ -263,6 +511,7 @@
                 }
 
                 tiles.push({
+                	key,
                     row,
                     col,
                     active: activeTiles.has(key),
@@ -273,10 +522,14 @@
                 });
             }
         }
-        //initPlayerWedges();
-        console.log(playerTiles)
+		console.log(playerTiles)
     }
 
+    // This is to initialize the wedges for each player
+    // TODO: display according to player count
+    function updatePlayerWedges() {
+		getallWedge();
+    }	
     
     // This is to initialize the wedges for each player
     // TODO: display according to player count
@@ -291,6 +544,7 @@
 	                	key,
 	                    row,
 	                    col,
+						tileColor:"#000000",
 	                    active: true,
 	                });
 	            }
@@ -299,56 +553,8 @@
 
     }
 
-    // Method to update the color when a wedge is filled 
-	function updateTileColor(pIndex, row, col, color) {
-	    // Get the player's tiles array
-	    const player = players[pIndex];
-	    const tiles = playerTiles[player];
-
-	    // Find the tile with matching row and col
-	    const tile = tiles.find(t => t.row === row && t.col === col);
-	    
-	    if (tile) {
-	        tile.tileColor = color; // Update the color
-	        console.log(playerTiles)
-	    } else {
-	        console.warn(`Tile not found at (${row}, ${col}) for player ${player}`);
-	    }
-
-	    playerTiles = { ...playerTiles };
-	}
-
     // Function that actually got used by button
     // TODO: hook this with backend return
-    // should be triggered when a player should have a wedge filled
-    function handleWedgeFill() {
-    	// this is how to fill a color to a wedge
-    	// updates player 0, row0, col 0 to yellow
-    	updateTileColor(0, 0,0, '#ff7f0e')
-    	//updates player 2, row0, col 1 to green
-    	updateTileColor(3, 0,1, '#2ca02c')
-
-    	
-    }
-
-    // method that MOVES the piece
-    function updatePieceLoc(newLocObj) {
-    	piecesPerTile = newLocObj;
-    	piecesPerTile = { ...piecesPerTile };
-	
-    }
-
-    // Function that handles the data of piece moves
-    // TODO: hook with backend returns
-    function handlePieceMove() {
-    	// should get this from backend
-
-    	const newLocObj = {
-    		'8,8': [0,1,3],
-    		'8,1': [2]
-    	}
-    	updatePieceLoc(newLocObj)
-    }
 
 	function handleRolled(event) {
 		let lastRollResult = null;
@@ -357,15 +563,7 @@
 
 		// TODO: get the next piece position
 		// This can be done by returning the roll result to backend
-
-		// TEST: move piece 0 by 5 to the right
-		// this should be returned by backend server
-		const newLocObj = {
-	    	'0,1': [1,2],
-	    	'0,2': [3],
-	    	'0,4': [0],
-    	}
-    	updatePieceLoc(newLocObj)
+		getvalidmove(activePiece,lastRollResult.roll);
 
 	}
 
@@ -381,7 +579,76 @@
 		}
 	}
 
+	async function handleTileClick(event) {
+		// The key is available in event.detail.key
+		const clickedTileKey = event.detail.key;
+		console.log('Selected tile:', clickedTileKey);
+        //The key is in format str: 0,2
+		// Do something with the key, like move a player piece
+		await movePlayer(clickedTileKey);
+        // clear lighting
+		possibleDestinations = [];
+		// update all player position
+		await getallposition();
+		// get the current type of squares from backend for current player
+        const temp_type = await getSquareType(activePiece);
+		// 1) Roll again->nothing, 2) normal & hq ->get question type, 3) center-->pick question type
+        if (temp_type === "HQ") {
+			//get the question type of the square
+			const temp_cat = await getCurrentCat(activePiece);
+		    // fetch question and answer, using the category variable
+        
+			const answercorrect = false
+		    // if correct, update wedges, using the category variable
+            await addwedge(activePiece,temp_cat);
+			activePiece = await (activePiece+1)%players.length;
+		}
+		else if (temp_type === "NL"){
+			//get the question type of the square
+			const temp_cat = await getCurrentCat(activePiece);
+		    // fetch question and answer, using the category variable
+        
+			const answercorrect = false
+		    // if incorrect, update activepiece
+			if (!answercorrect){
+				activePiece = await (activePiece+1)%players.length;
+			}
+		}
+		else if (temp_type === "CT"){
+			//prompt user to pick question type and update category variable
+			//temp_cat e.g. Math
+			const temp_cat = 'Math';
+		    // fetch question and answer, using the category variable
+			
+			const answercorrect = false
+		    // if correct, update wedges, using the category variable
+            
+			await addwedge(activePiece,temp_cat);
+			activePiece = await (activePiece+1)%players.length;
+		}
+		// update the display of player wedges
+		await updatePlayerWedges();
+		// check winning status
+		// anyoneWin return winning player list:e.g. [1]
+        await anyoneWin();
+		if (Iswin & answercorrect & winlist[0]==activePiece-1 ){
+			//some one win, the global variable winlist will be updated by updatePlayerWedges()
+			// check the winner player id from the list, 
+			// display winning message
+			// end game
+			// pending
 
+
+		}
+	}
+
+	function movePlayer(destinationKey) {
+		// TODO: send destinationKey to backend, update board layout, then call updateposition()
+        moveToDes(activePiece,destinationKey)
+
+    	//updatePieceLoc(newLocObj)
+		console.log('Moving player to', destinationKey);
+	}
 
 </script>
 
@@ -433,7 +700,7 @@
 			}
 		>
 		    {#each tiles as tile}
-		        <Tile active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor}/>
+		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
 		    {/each}
 		    <div class="absolute"
 		    	style="left: {tileSize}px;
@@ -523,8 +790,7 @@
 		</div>
 
 		<div class="aspect-square bg-white-500 border border-gray-400 rounded-sm">
-		<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
-			
+		<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />	
 		</div>
 	</section>
 
