@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+out/
+electron/build
+py311/
+build/
+dist/
+server/__pycache__/
