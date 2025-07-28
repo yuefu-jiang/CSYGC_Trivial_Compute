@@ -720,8 +720,6 @@
 		<div class="items-center justify-between">
 			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
 
-			<button on:click={() => showCatOverlay = true} class="absolute right-4 top-24 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">show cat</button>
-
 
 		<Overlay bind:show={showOverlayDice} >
 			<h2> Dice Roll! </h2>
