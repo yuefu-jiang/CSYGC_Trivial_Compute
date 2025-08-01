@@ -32,6 +32,8 @@
         const result = await response.json();
         const initData = result.data
 
+        console.log('question data:', result)
+
 		activeSession.update(store => {
 		const updated = {
 				...store,

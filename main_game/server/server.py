@@ -6,6 +6,7 @@ import os
 import logging
 import json
 import random
+from pathlib import Path
 
 from gameinstance import GameInstance
 from gamehelperfunct import poskeyTolist
@@ -16,6 +17,23 @@ gameSession = {}
 
 QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
 
+class ElectronLogHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        # Write to stdout which Electron can capture
+        print(log_entry)
+
+logger = logging.getLogger()
+logger.addHandler(ElectronLogHandler())
+
+def get_base_path():
+    """Get the base path whether running as script or bundled exe"""
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle
+        return sys._MEIPASS
+    else:
+        # Running as normal Python script
+        return os.path.dirname(os.path.abspath(__file__))
 
 def setup_server(*args, **kwargs):
     return Server(*args, **kwargs)
@@ -290,8 +308,20 @@ class Server:
 
     def return_question(self, category, qid, mark_used=False):
         try:
-            with open(QUESTION_FILE, 'r') as f:
-                data = json.load(f)
+            try:
+                base_path = get_base_path()
+                file_path = Path(base_path) / 'questions.json'
+                
+                if not file_path.exists():
+                    return {"error": f"File not found at {file_path}"}
+                    
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    
+            except Exception as e:
+                return {"error": str(e)}
+            # with open(QUESTION_FILE, 'r') as f:
+            #     data = json.load(f)
             self.app.logger.info('Loaded questions.')
             question_data = data.get(category, {}).get(qid, None)
             if question_data is None:
@@ -325,8 +355,23 @@ class Server:
 
     def return_all_questions(self):
         try:
-            with open(QUESTION_FILE, 'r') as f:
-                data = json.load(f)
+            try:
+                if getattr(sys, 'frozen', False):
+                    # Running in executable
+                    base_path = Path(sys.executable).parent
+                else:
+                    # Running as script
+                    base_path = Path(__file__).parent
+                file_path = Path(base_path) / 'questions.json'
+                
+                if not file_path.exists():
+                    return {"error": f"File not found at {file_path}"}
+                    
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    
+            except Exception as e:
+                return {"error": str(e)}
 
             self.app.logger.info('Started Game server and loaded question database.')
             aq_dict = {}
