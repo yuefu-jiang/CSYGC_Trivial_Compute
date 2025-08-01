@@ -1,5 +1,10 @@
 module.exports = {
-  packagerConfig: {},
+  packagerConfig: {
+    extraResource: [
+      './dist/server', 
+      
+    ],
+  },
   rebuildConfig: {},
   makers: [
     {

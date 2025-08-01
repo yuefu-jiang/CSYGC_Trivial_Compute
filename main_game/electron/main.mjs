@@ -1,4 +1,5 @@
 import { log } from 'console';
+//import log from 'electron-log'
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell, nativeImage, session, screen } from 'electron';
 import path from 'path';
 import net from 'net';
@@ -34,30 +35,51 @@ const startup = () => {
     });
 };
 const startServer = () => {
-    if (isDevEnvironment) {
-        let serverCodeDir = path.join(__dirname, '..', 'server');
-        // spawn the python server in a virtual environment
-        serverProc = spawn('python3', [path.join(serverCodeDir, 'server.py'), process.env.port]);
-    } else {
-        // Prod environment - launch the PyInstaller compiled server
-        let serverPath = path.join(app.getAppPath(), serverCodeDir);
-        serverProc = spawn(serverPath, [process.env.port, app.getPath('logs'), app.getVersion()]);
-    }
+    console.log('Starting server...'); // <-- Add this
+    console.log('isDevEnvironment:', isDevEnvironment); // <-- Add this
+    
+    try {
+        if (isDevEnvironment) {
+            const serverCodeDir = path.join(__dirname, '..', 'server');
+            log('Dev server path:', path.join(serverCodeDir, 'server.py')); // <-- Add this
+            serverProc = spawn('python3', [path.join(serverCodeDir, 'server.py'), process.env.port]);
 
-    serverProc.stdout.setEncoding('utf8');
-    serverProc.stdout.on('data', function (data) {
-        log('server-stdout: ' + data);
-    });
+            serverProc.stdout.on('data', (data) => {
+              console.log(`Python stdout: ${data}`);
+              // You could also send this to renderer process or write to file
+            });
 
-    serverProc.stderr.setEncoding('utf8');
-    serverProc.stderr.on('data', function (data) {
-        log('server-stderr: ' + data);
-        if (data.includes('* Running on')) {
-            pythonServerReady = true;
-            // Notify the render process that the python server is ready
-            mainWindow.webContents.send('pythonServerReady', pythonServerReady);
+            serverProc.stderr.on('data', (data) => {
+              console.error(`Python stderr: ${data}`);
+            });
+        } else {
+            const serverPath = path.join(process.resourcesPath, 'server');
+            log('Prod server path:', serverPath); // <-- Add this
+            serverProc = spawn(serverPath, [process.env.port]);
+
+            serverProc.stdout.on('data', (data) => {
+              console.log(`Python stdout: ${data}`);
+              // You could also send this to renderer process or write to file
+            });
+
+            serverProc.stderr.on('data', (data) => {
+              console.error(`Python stderr: ${data}`);
+            });
         }
-    });
+
+        serverProc.stdout.on('data', (data) => {
+            console.log(`SERVER OUTPUT: ${data}`); // <-- Make this more prominent
+            if (data.includes('* Running on')) {
+                pythonServerReady = true;
+                console.log('Python server ready!'); // <-- Add this
+                mainWindow?.webContents.send('pythonServerReady', pythonServerReady);
+            }
+        });
+
+        // ... rest of your code
+    } catch (err) {
+        console.error('SERVER STARTUP ERROR:', err); // <-- Make errors more visible
+    }
 };
 
 let mainWindow;
@@ -122,11 +144,21 @@ function createGameSessionWindow(sessionID) {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
+        webSecurity: false,  // Temporary: Allows file:// loads
+        nodeIntegration: false,
+        contextIsolation: true,
     });
 
+// Correctly format the file URL for production
 
-    const url = `http://localhost:5173/#/game-session?id=${sessionID}`;
-    gameWindow.loadURL(url);
+  const gameSessionUrl = isDevEnvironment
+    ? `http://localhost:5173/#/game-session?id=${sessionID}` // Dev
+    : `file://${path.join(__dirname, 'build', 'index.html')}#/game-session?id=${sessionID}`; // Prod
+
+
+  console.log('Game session URL:', gameSessionUrl); // Debug
+  gameWindow.loadURL(gameSessionUrl);
+
 }
 
 
