@@ -50,6 +50,8 @@
 		initPlayerWedges();
 		getallWedge(); // to display wedge at startup
 		updateGridSize();
+		getColorCatDict();
+
 		resizeObserver = new ResizeObserver(updateGridSize);
 		if (containerRef) resizeObserver.observe(containerRef);
 
@@ -85,6 +87,8 @@
 	//square type of current player
 	// "CT" "NL" "HQ"
 	let activeSq_type;
+	// the mapping of color and category
+	let colorCatObj = {};
 	// This is the color dict
     let inverseDictColor = {};
 	// player position dic
@@ -403,7 +407,31 @@
         console.log('question type result', msg)
 		return result.category;
     }
+    //get color: category info
+	async function getColorCatDict() {
+		const backendPort = window.api.getBackendPort()
 
+		const gameinput = {
+			gameid: sessionID,
+		};
+
+        const res = await fetch(`http://127.0.0.1:${backendPort}/getcolorcatdict`, {
+        	method: 'POST',
+        	headers: { 'Content-Type': 'application/json' },
+        	body: JSON.stringify(gameinput)
+        });
+
+		const result = await res.json();
+		
+
+		colorCatObj = result.data.reduce((acc, [_, hex, category]) => {
+		    acc[hex] = category;
+		    return acc;
+		}, {});
+		console.log('Cat:color', colorCatObj)
+
+		
+	}
     // update the list of winning eligible player list:e.g. [0,1]
 	async function anyoneCanWin() {
 		const backendPort = window.api.getBackendPort()
@@ -450,7 +478,7 @@
                 if (key == '0,4' ||key == '4,0' || key == '4,8' || key == '8,4') {
                 	currText = 'HQ'
                 }
-
+                //console.log(tiles)
                 tiles.push({
                 	key,
                     row,
@@ -458,12 +486,13 @@
                     active: activeTiles.has(key),
                     pieces: piecesPerTile[key] ?? [],
                     tileColor: currColor,
+                    category: colorCatObj[currColor],
                     textColor: txColor,
                     text: currText,
                 });
             }
         }
-		console.log(playerTiles)
+		//console.log(playerTiles)
     }
 
     // This is to initialize the wedges for each player
@@ -531,6 +560,7 @@
 		possibleDestinations = [];
 		// update all player position
 		await getallposition();
+		getColorCatDict();
 		// get the current type of squares from backend for current player
         let temp_type = await getSquareType(activePiece);
 		// 1) Roll again->nothing, 2) normal & hq ->get question type, 3) center-->pick question type
@@ -768,7 +798,7 @@
 			}
 		>
 		    {#each tiles as tile}
-		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
+		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} category={tile.category} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
 		    {/each}
 		    <div class="absolute"
 		    	style="left: {tileSize}px;

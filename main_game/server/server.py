@@ -109,6 +109,10 @@ class Server:
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
+        self.app.add_url_rule(
+            "/getcolorcatdict", "getcolorcatdict", self.getcolorcatdict, methods=["POST"]
+        )
+
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -155,6 +159,17 @@ class Server:
             'category': category
         })
     
+    def getcolorcatdict(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        color_cat_list = temp.wedgelist
+        return jsonify(
+            {
+            'data': color_cat_list,
+            }
+        )
+
     def initializegametest(self):
         content = request.get_json()
         gameid = content.get('gameid')
