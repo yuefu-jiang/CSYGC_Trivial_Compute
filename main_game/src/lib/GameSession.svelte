@@ -82,6 +82,9 @@
 	let question;
 	//let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
 	let players = [];
+	// piece color
+	let pieceColors = ['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500']; // fixed for now
+	let playerTextColor = ['#3b82f6','#eab308','#ef4444','#22c55e']; // fixed for now
     //id for current player
 	let activePiece = 0; 
 	//square type of current player
@@ -463,16 +466,20 @@
                 let currColor;
                 let currText;
                 let txColor;
+                let currCategory; //for hover text
                 if (key == '0,0' || key == '0,8' ||key == '8,0' ||key == '8,8') {
                 	currColor = '#ffffff'
                 	txColor = '#000000'
-                	currText = 'RA'}
+                	currText = 'RA'
+                	currCategory = 'Roll Again!'}
                 else if (key == '4,4') {
                 	currColor = '#ffffff'
                 	txColor = '#000000'
                 	currText = 'TC!'
+                	currCategory = 'Trivial Compute!'
                 } else {
                 	currColor = inverseDictColor[key]
+                	currCategory = colorCatObj[currColor]
                 }
 
                 if (key == '0,4' ||key == '4,0' || key == '4,8' || key == '8,4') {
@@ -486,7 +493,7 @@
                     active: activeTiles.has(key),
                     pieces: piecesPerTile[key] ?? [],
                     tileColor: currColor,
-                    category: colorCatObj[currColor],
+                    category: currCategory,
                     textColor: txColor,
                     text: currText,
                 });
@@ -765,7 +772,7 @@
 
 
 		<Overlay bind:show={showCatOverlay} >
-			<h2> Choose a WINNING category!! </h2>
+			<h2> Choose a category for {players[activePiece]}! </h2>
 			<div class="flex  flex-col">
 				{#each selected_cat as cat}
 					<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectCat(cat)}>
@@ -784,12 +791,15 @@
 			
 		</div>
 		<h1 class="pt-10  text-3xl font-bold">Trivial Compute!</h1>
-		<h2 class="mt-6 text-xl font-bold"> Active Player: {players[activePiece]} </h2>
+		<div class="flex flex-row">
+			<h2 class="mt-6 mb-2 text-xl font-bold" style="color: white;"> Now playing: </h2>
+			<h2 class="pl-2 mt-6 mb-2 text-xl font-bold" style="color: {playerTextColor[activePiece]};"> {players[activePiece]} </h2>
+		</div>
 	</section>
 
 	
 	<!-- Middle Part -->
-	<section class="flex flex-row items-center justify-center mt-6 mr-10 ml-10">
+	<section class="flex flex-row items-center justify-center mt-6 mr-10 ml-10 min-h-96">
 
 		<div
 			bind:this={containerRef}

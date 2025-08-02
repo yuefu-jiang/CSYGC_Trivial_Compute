@@ -7,6 +7,7 @@
     export let text;
     export let key;
     export let possibleDest = false;
+    export let pieceColors = ['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500'];
 
     // Define layouts for 1-4 pieces
     const pieceLayouts = {
@@ -21,7 +22,7 @@
         ]
     };
 
-    const pieceColors = ['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500'];
+    //const pieceColors = ['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500'];
     
     $: currentLayout = pieceLayouts[Math.min(pieces.length, 4)] || [];
 
