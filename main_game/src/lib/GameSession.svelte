@@ -901,9 +901,4 @@
 			<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
 		</div>
 	</section>
-	<section>
-		Place holder for color annotation?
-	</section>
-
-
 </main>
