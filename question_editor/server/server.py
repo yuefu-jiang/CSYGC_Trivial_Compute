@@ -167,5 +167,5 @@ class Server:
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
     server = Server()
-    print(f"🚀 Starting Flask server on port {port}...")
+    print(f"Starting Flask server on port {port}...")
     server.app.run(host="127.0.0.1", port=port, debug=True)

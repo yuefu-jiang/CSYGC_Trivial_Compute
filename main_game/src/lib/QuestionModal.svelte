@@ -3,6 +3,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let open;
+	export let category = "";
 	export let question = "";
 	export let answer = "";
 
@@ -70,7 +71,7 @@
 	}
 </script>
 
-<Modal title="Trivia Question" form bind:open={open} size="lg" {onaction}>
+<Modal title="{category} Trivia Question" form bind:open={open} size="lg" {onaction}>
 	<p class="mb-4">{question}</p>
 
 	{#if showAnswer}

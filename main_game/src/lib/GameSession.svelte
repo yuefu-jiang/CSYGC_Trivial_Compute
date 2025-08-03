@@ -735,7 +735,8 @@
 
 
 		<Overlay bind:show={showCatOverlay} >
-			<h2> Choose a WINNING category!! </h2>
+			{#if ActiveplayerCanWin}
+			<h2> Opponents choose a WINNING category!! </h2>
 			<div class="flex  flex-col">
 				{#each selected_cat as cat}
 					<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectCat(cat)}>
@@ -743,6 +744,16 @@
 					</button>
 				{/each}
 			</div>
+			{:else}
+			<h2> {players[activePiece]} choose a category! </h2>
+			<div class="flex  flex-col">
+				{#each selected_cat as cat}
+					<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectCat(cat)}>
+						{cat}
+					</button>
+				{/each}
+			</div>
+			{/if}
 		</Overlay>
 
 		<Overlay bind:show={$gameWon} >
@@ -858,12 +869,12 @@
 		</div>
 
 		<div class="aspect-square bg-white-500 border border-gray-400 rounded-sm">
-			<QuestionModal bind:open={showQuestionModal} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
+			<QuestionModal bind:open={showQuestionModal} category={category} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
 		</div>
 	</section>
-	<section>
+	<!-- <section>
 		Place holder for color annotation?
-	</section>
+	</section> -->
 
 
 </main>
