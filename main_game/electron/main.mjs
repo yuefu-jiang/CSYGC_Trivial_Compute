@@ -95,7 +95,49 @@ const createWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
+    ipcMain.handle('select-directory', async (event, operation) => {
+        const properties = operation === 'export' ? ['openDirectory', 'createDirectory'] : ['openDirectory'];
+        const result = await dialog.showOpenDialog({
+            properties: properties
+        });
+        if (result.canceled) {
+            return null;
+        } else {
+            return result.filePaths[0];
+        }
+    }); // not used for now
 
+    ipcMain.handle('return-dir', async (event) => {
+      try {
+        const dir = await app.getPath('exe');
+        const questionDB = 'questions.json'
+        if (isDevEnvironment) {
+            //current dir's parent dir
+            const devDir = await app.getAppPath()
+            return path.join(path.dirname(devDir), questionDB)
+        }else{
+          if (process.platform === 'darwin') {
+            return path.join(path.dirname(path.dirname(path.dirname(path.dirname(dir)))), questionDB); // .app dir
+          } else {
+            return path.join(path.dirname(dir), questionDB); // Windows/Linux: dir containing exe
+          }
+        }
+      } catch (error) {
+        console.error('Failed find questions:', error);
+        return error;
+      }
+    });
+    ipcMain.handle('read-file', async (event, filePath) => {
+      try {
+        const fullPath = path.join(app.getAppPath(), filePath);
+        const content = await fs.promises.readFile(filePath, 'utf8');
+        console.log(content)
+        return content; // Returns the file content as a string
+      } catch (error) {
+        console.error('Failed to read file:', error);
+        return error;
+      }
+    });
     // define how electron will load the app
     if (isDevEnvironment) {
 
@@ -154,6 +196,17 @@ function createGameSessionWindow(sessionID) {
   const gameSessionUrl = isDevEnvironment
     ? `http://localhost:5173/#/game-session?id=${sessionID}` // Dev
     : `file://${path.join(__dirname, 'build', 'index.html')}#/game-session?id=${sessionID}`; // Prod
+    ipcMain.handle('read-directory', async (event, directoryPath) => {
+      try {
+        const files = await fs.promises.readdir(directoryPath);
+        return files; // Returns an array of filenames/directory names
+      } catch (error) {
+        console.error('Failed to read directory:', error);
+        return null;
+      }
+    });
+
+
 
 
   console.log('Game session URL:', gameSessionUrl); // Debug

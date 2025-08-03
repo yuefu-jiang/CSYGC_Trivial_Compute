@@ -13,6 +13,7 @@
 
 	let showOverlayDice = false;
 	let showCatOverlay = false;
+	let currDir
 
 
 	export let sessionID;
@@ -22,15 +23,27 @@
 		const params = new URLSearchParams(hash.split('?')[1]);
 		sessionID = params.get('id');
 
+        currDir = await window.electronAPI.returnDir();
+		console.log(currDir)
+		console.log(typeof currDir)
+
 		const backendPort = window.api.getBackendPort()
         const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 'data': 'new session' }),
+            body: JSON.stringify({ 'data': currDir }),
             method: 'POST',
         });
         // wait for result. If anything goes wrong it will fail to fetch
         const result = await response.json();
         const initData = result.data
+
+		//const selectedDir = await window.electronAPI.selectDir('export');
+		//showDataDir = true;
+		//selectedDir = handleSelectDir();
+        const qdir = '../questions.json'
+        const allq = await window.electronAPI.readFile(currDir);
+
+        //console.log(allq)
 
         console.log('question data:', result)
 
@@ -122,6 +135,8 @@
 	let modalAnswer = "";
 	let constested = writable(false);
 	let gameWon = writable(false);
+	let showDataDir = false;
+	let selectedDir;
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -407,7 +422,7 @@
 		const result = await initialize_response.json();
 		category = result.category;
         const msg = result.msg;
-        console.log('question type result', msg)
+        //console.log('question type result', msg)
 		return result.category;
     }
     //get color: category info
@@ -688,8 +703,18 @@
 		const currCatQlist = [...$activeSession[category]];
 		const qid = getRandomItem(currCatQlist);
 		const backendPort = window.api.getBackendPort();
+
+		const question_param = {
+			'category': category,
+			'qid': qid,
+			'path': currDir,
+		}
 		try {
-			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
+	        const res = await fetch(`http://127.0.0.1:${backendPort}/get_question`, {
+	        	method: 'POST',
+	        	headers: { 'Content-Type': 'application/json' },
+	        	body: JSON.stringify(question_param)
+	        });
 			const result = await res.json();
 			modalQuestion = result.data.question;
 			modalAnswer = result.data.answer;
@@ -697,7 +722,7 @@
 			console.log("Fetched Q&A:", result.data);
 			removeElement(category, qid)
 			// to remove question to avoid redundancy
-			console.log($activeSession)
+			//console.log($activeSession)
 			return 
 		} catch (err) {
 			console.error("Failed to fetch question:", err);
@@ -742,6 +767,11 @@
 		openQuestionModal(cat);
 	}
 
+	async function handleSelectDir() {
+		selectedDir = await window.electronAPI.selectDir('export');
+		
+	}
+
 </script>
 
 <main class="min-h-screen bg-slate-900 text-white flex flex-col">
@@ -780,6 +810,11 @@
 					</button>
 				{/each}
 			</div>
+		</Overlay>
+		<Overlay bind:show={showDataDir} >
+			<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectDir()}>
+				Select data directory
+			</button>
 		</Overlay>
 
 		<Overlay bind:show={$gameWon} >

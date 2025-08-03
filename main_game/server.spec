@@ -3,7 +3,7 @@ a = Analysis(
     ['./server/server.py'],
     pathex=['./server'],
     binaries=[],
-    datas=[('./server/questions.json', '.')],
+    #datas=[('./server/questions.json', '.')],
     hiddenimports=[],  # Add any hidden imports here
     hookspath=[],
     hooksconfig={},

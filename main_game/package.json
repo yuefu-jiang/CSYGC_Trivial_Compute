@@ -19,7 +19,6 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./server/questions.json",
           "./dist/server"
         ]
       },
