@@ -337,12 +337,12 @@ class Server:
                 if not QUESTION_DB.exists():
                     return {"error": f"File not found at {QUESTION_DB}"}
                     
-                with open(QUESTION_DB, 'r') as f:
+                with open(QUESTION_DB, 'r', encoding="cp866") as f:
                     data = json.load(f)
                     
             except Exception as e:
                 return {"error": str(e)}
-            # with open(QUESTION_FILE, 'r') as f:
+            # with open(QUESTION_FILE, 'r', encoding="cp866") as f:
             #     data = json.load(f)
             self.app.logger.info('Loaded questions.')
             question_data = data.get(category, {}).get(qid, None)
@@ -352,7 +352,7 @@ class Server:
             if mark_used:
                 question_data['used'] = True
                 data[category][qid]['used'] = True
-                with open(QUESTION_DB, 'w') as f:
+                with open(QUESTION_DB, 'w', encoding="cp866") as f:
                     json.dump(data, f, indent=2)
             return question_data
 
@@ -388,7 +388,7 @@ class Server:
                 if not QUESTION_DB.exists():
                     return {"error": f"File not found at {QUESTION_DB}"}
                     
-                with open(QUESTION_DB, 'r') as f:
+                with open(QUESTION_DB, 'r', encoding="cp866") as f:
                     data = json.load(f)
                     
             except Exception as e:

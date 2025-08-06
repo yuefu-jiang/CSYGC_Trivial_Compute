@@ -1,8 +1,7 @@
 module.exports = {
   packagerConfig: {
     extraResource: [
-      './dist/server', 
-      
+      './dist/server.exe'
     ],
   },
   rebuildConfig: {},

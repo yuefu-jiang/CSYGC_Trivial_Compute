@@ -1,5 +1,6 @@
 {
   "name": "CSYGC Trivial Compute",
+  "authors": "CSYGC software solutions",
   "description": "By CSYGC from JHU",
   "license": "MIT",
   "private": true,
@@ -19,7 +20,7 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./dist/server"
+          "./dist/server.exe"
         ]
       },
       "makers": [

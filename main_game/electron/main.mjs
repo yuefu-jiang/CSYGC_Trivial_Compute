@@ -53,7 +53,9 @@ const startServer = () => {
               console.error(`Python stderr: ${data}`);
             });
         } else {
-            const serverPath = path.join(process.resourcesPath, 'server');
+
+	    const serverPath = path.join(process.resourcesPath, 'server.exe');
+
             log('Prod server path:', serverPath); // <-- Add this
             serverProc = spawn(serverPath, [process.env.port]);
 
