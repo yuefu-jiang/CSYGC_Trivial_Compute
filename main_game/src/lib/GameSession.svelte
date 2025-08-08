@@ -696,11 +696,39 @@
 	        };
 	    });
 	}
+
+
+	// reset the ctegory if list got used up
+	async function resetCatList(category) {
+		const backendPort = window.api.getBackendPort()
+        const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 'data': currDir }),
+            method: 'POST',
+        });
+        // wait for result. If anything goes wrong it will fail to fetch
+        const result = await response.json();
+        const catData = result.data[category]
+        console.log('Resetting category', category)
+	    activeSession.update(current => {
+	        // Create a new object with the updated array
+	        return {
+	            ...current,
+	            [category]: catData,
+	        };
+	    });
+
+	}
 	/**
 	 * Function to open question modal
 	 */
 	async function openQuestionModal(category) {
 		const currCatQlist = [...$activeSession[category]];
+
+		//reset if used up
+		if (currCatQlist.length === 0) {
+			resetCatList(category)
+		};
 		const qid = getRandomItem(currCatQlist);
 		const backendPort = window.api.getBackendPort();
 
