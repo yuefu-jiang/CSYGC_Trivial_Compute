@@ -14,6 +14,7 @@
 	let showOverlayDice = false;
 	let showCatOverlay = false;
 	let currDir
+	let playerSwitch = false;
 
 
 	export let sessionID;
@@ -770,6 +771,7 @@
 
 		if (!isCorrect) {
 			console.log('Wrong!');
+			playerSwitch = true;
 			activePiece = (activePiece + 1) % players.length;
 			$constested = false;
 		} else {
@@ -798,6 +800,10 @@
 	async function handleSelectDir() {
 		selectedDir = await window.electronAPI.selectDir('export');
 		
+	}
+
+	function togglePlayerSwitch () {
+		playerSwitch = false;
 	}
 
 </script>
@@ -843,6 +849,10 @@
 			<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectDir()}>
 				Select data directory
 			</button>
+		</Overlay>
+
+		<Overlay bind:show={playerSwitch} on:close={() => togglePlayerSwitch()}>
+			<h1> {players[activePiece]}'s turn!</h1>
 		</Overlay>
 
 		<Overlay bind:show={$gameWon} >
