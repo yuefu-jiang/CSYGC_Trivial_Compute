@@ -4,7 +4,7 @@
   "description": "By CSYGC from JHU",
   "license": "MIT",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "electron/main.mjs",
   "scripts": {
@@ -20,7 +20,9 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./dist/server.exe"
+          "./dist/server.exe",
+	        "../questions.json"
+
         ]
       },
       "makers": [
