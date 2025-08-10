@@ -6,6 +6,7 @@ import os
 import logging
 import json
 import random
+from pathlib import Path
 
 from gameinstance import GameInstance
 from gamehelperfunct import poskeyTolist
@@ -14,8 +15,30 @@ from gamehelperfunct import poskeyTolist
 # it is propably a good idea to implement actual game functions in separate scripts and import them here.
 gameSession = {}
 
-QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
+#QUESTION_FILE = os.path.join(os.path.dirname(__file__), 'questions.json')
+QUESTION_FILE = Path(__file__).resolve().parents[2] / "questions.json"
 
+global QUESTION_DB
+
+class ElectronLogHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        # Write to stdout which Electron can capture
+        print(log_entry)
+
+logger = logging.getLogger()
+logger.addHandler(ElectronLogHandler())
+
+def get_base_path():
+    """Get the base path whether running as script or bundled exe"""
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle
+        print('BASE', sys._MEIPASS)
+        return sys._MEIPASS
+    else:
+        # Running as normal Python script
+        print('BASE', Path(__file__).resolve().parents[2])
+        return Path(__file__).resolve().parents[2]
 
 def setup_server(*args, **kwargs):
     return Server(*args, **kwargs)
@@ -32,7 +55,7 @@ class Server:
             "/rule", "rule", self.rule, methods = ["POST"]
         )  
         self.app.add_url_rule(
-            "/question", "get_question", self.get_question, methods=["GET"]
+            "/get_question", "get_question", self.get_question, methods=["POST"]
         )
 
         self.app.add_url_rule(
@@ -91,6 +114,10 @@ class Server:
             "/roll", "roll", self.roll, methods=["POST"]
         )
 
+        self.app.add_url_rule(
+            "/getcolorcatdict", "getcolorcatdict", self.getcolorcatdict, methods=["POST"]
+        )
+
         logging.basicConfig(
             level=logging.DEBUG,
             format='[%(asctime)s] %(levelname)s  %(message)s'
@@ -137,6 +164,17 @@ class Server:
             'category': category
         })
     
+    def getcolorcatdict(self):
+        content = request.get_json()
+        gameid = content.get('gameid')
+        temp = gameSession.get(gameid)
+        color_cat_list = temp.wedgelist
+        return jsonify(
+            {
+            'data': color_cat_list,
+            }
+        )
+
     def initializegametest(self):
         content = request.get_json()
         gameid = content.get('gameid')
@@ -144,11 +182,13 @@ class Server:
         q_cat = content.get('q_cat')
         q_type = len(q_cat)
         b_size = content.get('b_size')
+        db_path = content.get('db_path')
+        QUESTION_DB = db_path;
         self.app.logger.info(content)
         newgame=GameInstance()
         newgame.initialize(gameid,namelist,q_cat)
         gameSession.update({gameid:newgame})
-        print(gameSession, flush=True)
+        #print(gameSession, flush=True)
         return jsonify(
             {
                 'list': [0,1],
@@ -288,10 +328,22 @@ class Server:
             }
         ) 
 
-    def return_question(self, category, qid, mark_used=False):
+    def return_question(self, category, qid, qpath, mark_used=False):
         try:
-            with open(QUESTION_FILE, 'r') as f:
-                data = json.load(f)
+            try:
+                content = request.get_json()
+                QUESTION_DB = Path(qpath)
+                
+                if not QUESTION_DB.exists():
+                    return {"error": f"File not found at {QUESTION_DB}"}
+                    
+                with open(QUESTION_DB, 'r', encoding="cp866") as f:
+                    data = json.load(f)
+                    
+            except Exception as e:
+                return {"error": str(e)}
+            # with open(QUESTION_FILE, 'r', encoding="cp866") as f:
+            #     data = json.load(f)
             self.app.logger.info('Loaded questions.')
             question_data = data.get(category, {}).get(qid, None)
             if question_data is None:
@@ -300,7 +352,7 @@ class Server:
             if mark_used:
                 question_data['used'] = True
                 data[category][qid]['used'] = True
-                with open(QUESTION_FILE, 'w') as f:
+                with open(QUESTION_DB, 'w', encoding="cp866") as f:
                     json.dump(data, f, indent=2)
             return question_data
 
@@ -309,13 +361,15 @@ class Server:
             return None
 
     def get_question(self):
-        qid = request.args.get('qid')
-        category = request.args.get('category')
+        content = request.get_json()
+        qid = content.get('qid')
+        category = content.get('category')
+        q_path = content.get('path')
         self.app.logger.info(category)
         if not category or not qid:
             return jsonify({'error': 'Missing parameters'}), 400
 
-        question = self.return_question(category, qid, mark_used=False)  # set to True if write enabled
+        question = self.return_question(category, qid, q_path, mark_used=False)  # set to True if write enabled
 
         if question:
             self.app.logger.info(f'Returned QID #{qid} to frontend.')
@@ -325,8 +379,20 @@ class Server:
 
     def return_all_questions(self):
         try:
-            with open(QUESTION_FILE, 'r') as f:
-                data = json.load(f)
+            try:
+                #base_path = get_base_path()
+                #file_path = Path(base_path) / 'questions.json'
+                content = request.get_json()
+                QUESTION_DB = Path(content.get('data'))
+
+                if not QUESTION_DB.exists():
+                    return {"error": f"File not found at {QUESTION_DB}"}
+                    
+                with open(QUESTION_DB, 'r', encoding="cp866") as f:
+                    data = json.load(f)
+                    
+            except Exception as e:
+                return {"error": str(e)}
 
             self.app.logger.info('Started Game server and loaded question database.')
             aq_dict = {}
