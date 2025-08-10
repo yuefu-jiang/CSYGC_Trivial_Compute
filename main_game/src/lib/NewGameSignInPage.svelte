@@ -26,6 +26,7 @@
     let categoryOptions;
     // let selectedCategories = new Set([]);
     let selectedCategoriesList = $state(Array(NUMBER_OF_CATEGORIES).fill(''));
+    const categoryColors = ["#d62728","#1f77b4","#ff7f0e","#2ca02c"];
 
     let currentRoute = window.location.hash || '#/';
     let queryParams = new URLSearchParams();
@@ -213,7 +214,8 @@
                     {#if num === 0 || selectedCategoriesList[num - 1] !== "" }
                         <div class="w-full max-w-md">
                             <select
-                                class="w-full p-3 text-white bg-slate-800 border border-indigo-900 border-opacity-70 rounded-md
+                                style="border-color: {categoryColors[num]}"
+                                class="w-full p-3 text-white bg-slate-800 border-2 border-opacity-70 rounded-md
                                     focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition-all duration-200"
                                 bind:value={selectedCategoriesList[num]}
                                 onchange={() => { validateCategorySelection(); } }
