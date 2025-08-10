@@ -3,6 +3,7 @@
     const dispatcher = createEventDispatcher();
 
     export let autoClose = false;
+    export let disabled = true;
     let rolling = false;
     let face = 1;
 
@@ -12,6 +13,7 @@
 
     async function rollDice() {
         if (rolling) return;
+        disabled = true;
         rolling = true;
         // Animate dice roll
         let ticks = 0;
@@ -37,12 +39,12 @@
             face = result.roll;
             rolling = false;
             dispatcher('rolled', result);
-        }, 900);
+        }, 1500);
         setTimeout(() => dispatcher('close'), 3000);
     }
 </script>
 
-<button class="dice-btn" on:click={rollDice} disabled={rolling}>
+<button class="dice-btn" on:click={rollDice} disabled={disabled}>
     <div class="dice-face dice-face-{face}">
         {#if face === 1}
             <span class="dot center"></span>
@@ -92,7 +94,7 @@
     transition: background 0.2s;
 }
 .dice-btn:disabled {
-    opacity: 0.6;
+    /* opacity: 0.6; */
     cursor: not-allowed;
 }
 .dice-face {

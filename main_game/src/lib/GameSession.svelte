@@ -821,12 +821,21 @@
 				/>
 			</a>
 		<div class="items-center justify-between">
-			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
-
+			<button
+				disabled={possibleDestinations.length !== 0}
+				on:click={() => showOverlayDice = true}
+				class="absolute right-4 top-4 h-16 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md
+					transition-all duration-300
+					hover:border-indigo-500 hover:bg-slate-800
+					disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:border-gray-500"
+			>
+				Roll Dice
+			</button>
 
 		<Overlay bind:show={showOverlayDice} >
 			<h2> Dice Roll! </h2>
-			<Dice 
+			<Dice
+				disabled={false}
 				autoClose={true}
 				on:close={handleClose}
 				on:rolled={handleRolled}
@@ -855,6 +864,16 @@
 				{/each}
 			</div>
 			{/if}
+		</Overlay>
+		<Overlay bind:show={showDataDir} >
+			<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectDir()}>
+				Select data directory
+			</button>
+		</Overlay>
+
+		<Overlay bind:show={playerSwitch} on:close={() => togglePlayerSwitch()}>
+			<h1> {players[activePiece]}'s turn!</h1>
+		</Overlay>
 		<Overlay bind:show={showDataDir} >
 			<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectDir()}>
 				Select data directory
