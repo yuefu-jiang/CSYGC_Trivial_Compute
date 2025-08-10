@@ -5,6 +5,7 @@ import os
 import logging
 import json
 from pathlib import Path
+from csvConvert import csv_to_json
 
 QUESTION_FILE = Path(__file__).resolve().parents[2] / "questions.json"
 
@@ -22,6 +23,8 @@ class Server:
         self.app.add_url_rule("/init_questions", "init_questions", self.return_all_questions, methods=["POST"])
         self.app.add_url_rule("/replace_questions_file", "replace_questions_file", self.replace_questions_file, methods=["POST"])
         self.app.add_url_rule("/add_to_questions_file", "add_to_questions_file", self.add_to_questions_file, methods=["POST"])
+        self.app.add_url_rule("/convertCSVtoJson", "convertCSVtoJson", self.convertCSVtoJson, methods=["POST"])
+        
 
         logging.basicConfig(
             level=logging.DEBUG,
@@ -162,6 +165,18 @@ class Server:
         except Exception as e:
             self.app.logger.error(f"Error reading questions file: {e}")
             return jsonify({'error': 'Failed to read questions file'}), 500
+        
+    def convertCSVtoJson(self):
+        try:
+            with open(QUESTION_FILE, 'rb') as in_file:
+                output_dict = csv_to_json(in_file)
+
+            self.app.logger.info('Returning a json object converted from csv.')
+            return jsonify({'data': output_dict})
+
+        except Exception as e:
+            self.app.logger.error(f"Error reading csv file: {e}")
+            return jsonify({'error': 'Failed to read csv file'}), 500
 
 # Start server
 if __name__ == "__main__":
