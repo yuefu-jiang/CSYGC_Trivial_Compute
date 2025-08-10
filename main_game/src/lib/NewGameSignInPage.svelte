@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
 	import csygcLogo from "../assets/csygcLogo.png"
     import Chip, { Text } from '@smui/chips';
     import Button, { Label } from '@smui/button';
@@ -22,21 +23,27 @@
     let playerNames = $state([]);
 
     let validCategories = $state(false);
-    let categoryOptions = new Set([
-        "Geography",
-        "History",
-        "Math",
-        "Computer Science",
-        "Spanish",
-        "English",
-        "Physics",
-    ]);
+    let categoryOptions;
     // let selectedCategories = new Set([]);
     let selectedCategoriesList = $state(Array(NUMBER_OF_CATEGORIES).fill(''));
 
     let currentRoute = window.location.hash || '#/';
     let queryParams = new URLSearchParams();
+    let currDir;
 
+
+    onMount(async () => {
+        currDir = await window.electronAPI.returnDir();
+        console.log(currDir)
+        try {
+            const allq = await window.electronAPI.readFile(currDir);
+            const importedQDB = JSON.parse(allq)
+            const importedCat = Object.keys(importedQDB);
+            categoryOptions = new Set(importedCat)
+        } catch (e) {
+            window.alert('question.json needs to be in this folder!')
+        }
+    })
 
     function validateNames() {
         for (let i = 0; i < numberOfPlayers; i++) {
@@ -135,8 +142,8 @@
 			gameid: newSessionID,
 			namelist: playerNames,
             q_cat:selectedCategoriesList,
-			//q_type: 4,
 			b_size: 9,
+            db_path: currDir,
 		};
 		
 		//route to game initialize

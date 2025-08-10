@@ -13,6 +13,8 @@
 
 	let showOverlayDice = false;
 	let showCatOverlay = false;
+	let currDir
+	let playerSwitch = false;
 
 
 	export let sessionID;
@@ -22,15 +24,29 @@
 		const params = new URLSearchParams(hash.split('?')[1]);
 		sessionID = params.get('id');
 
+        currDir = await window.electronAPI.returnDir();
+		console.log(currDir)
+		console.log(typeof currDir)
+
 		const backendPort = window.api.getBackendPort()
         const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 'data': 'new session' }),
+            body: JSON.stringify({ 'data': currDir }),
             method: 'POST',
         });
         // wait for result. If anything goes wrong it will fail to fetch
         const result = await response.json();
         const initData = result.data
+
+		//const selectedDir = await window.electronAPI.selectDir('export');
+		//showDataDir = true;
+		//selectedDir = handleSelectDir();
+        const qdir = '../questions.json'
+        const allq = await window.electronAPI.readFile(currDir);
+
+        //console.log(allq)
+
+        console.log('question data:', result)
 
 		activeSession.update(store => {
 		const updated = {
@@ -48,6 +64,8 @@
 		initPlayerWedges();
 		getallWedge(); // to display wedge at startup
 		updateGridSize();
+		getColorCatDict();
+
 		resizeObserver = new ResizeObserver(updateGridSize);
 		if (containerRef) resizeObserver.observe(containerRef);
 
@@ -78,11 +96,16 @@
 	let question;
 	//let players = ['p1', 'p2', 'p3', 'p4'] // TEMP: from backend
 	let players = [];
+	// piece color
+	let pieceColors = ['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500']; // fixed for now
+	let playerTextColor = ['#3b82f6','#eab308','#ef4444','#22c55e']; // fixed for now
     //id for current player
 	let activePiece = 0; 
 	//square type of current player
 	// "CT" "NL" "HQ"
 	let activeSq_type;
+	// the mapping of color and category
+	let colorCatObj = {};
 	// This is the color dict
     let inverseDictColor = {};
 	// player position dic
@@ -113,6 +136,8 @@
 	let modalAnswer = "";
 	let constested = writable(false);
 	let gameWon = writable(false);
+	let showDataDir = false;
+	let selectedDir;
 
 	function getRandomItem(list) {
 		if (!Array.isArray(list) || list.length === 0) return null;
@@ -398,10 +423,34 @@
 		const result = await initialize_response.json();
 		category = result.category;
         const msg = result.msg;
-        console.log('question type result', msg)
+        //console.log('question type result', msg)
 		return result.category;
     }
+    //get color: category info
+	async function getColorCatDict() {
+		const backendPort = window.api.getBackendPort()
 
+		const gameinput = {
+			gameid: sessionID,
+		};
+
+        const res = await fetch(`http://127.0.0.1:${backendPort}/getcolorcatdict`, {
+        	method: 'POST',
+        	headers: { 'Content-Type': 'application/json' },
+        	body: JSON.stringify(gameinput)
+        });
+
+		const result = await res.json();
+		
+
+		colorCatObj = result.data.reduce((acc, [_, hex, category]) => {
+		    acc[hex] = category;
+		    return acc;
+		}, {});
+		console.log('Cat:color', colorCatObj)
+
+		
+	}
     // update the list of winning eligible player list:e.g. [0,1]
 	async function anyoneCanWin() {
 		const backendPort = window.api.getBackendPort()
@@ -433,22 +482,26 @@
                 let currColor;
                 let currText;
                 let txColor;
+                let currCategory; //for hover text
                 if (key == '0,0' || key == '0,8' ||key == '8,0' ||key == '8,8') {
                 	currColor = '#ffffff'
                 	txColor = '#000000'
-                	currText = 'RA'}
+                	currText = 'RA'
+                	currCategory = 'Roll Again!'}
                 else if (key == '4,4') {
                 	currColor = '#ffffff'
                 	txColor = '#000000'
                 	currText = 'TC!'
+                	currCategory = 'Trivial Compute!'
                 } else {
                 	currColor = inverseDictColor[key]
+                	currCategory = colorCatObj[currColor]
                 }
 
                 if (key == '0,4' ||key == '4,0' || key == '4,8' || key == '8,4') {
                 	currText = 'HQ'
                 }
-
+                //console.log(tiles)
                 tiles.push({
                 	key,
                     row,
@@ -456,12 +509,13 @@
                     active: activeTiles.has(key),
                     pieces: piecesPerTile[key] ?? [],
                     tileColor: currColor,
+                    category: currCategory,
                     textColor: txColor,
                     text: currText,
                 });
             }
         }
-		console.log(playerTiles)
+		//console.log(playerTiles)
     }
 
     // This is to initialize the wedges for each player
@@ -529,6 +583,7 @@
 		possibleDestinations = [];
 		// update all player position
 		await getallposition();
+		getColorCatDict();
 		// get the current type of squares from backend for current player
         let temp_type = await getSquareType(activePiece);
 		// 1) Roll again->nothing, 2) normal & hq ->get question type, 3) center-->pick question type
@@ -642,15 +697,53 @@
 	        };
 	    });
 	}
+
+
+	// reset the ctegory if list got used up
+	async function resetCatList(category) {
+		const backendPort = window.api.getBackendPort()
+        const response = await fetch(`http://127.0.0.1:${backendPort}/init_questions`, {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 'data': currDir }),
+            method: 'POST',
+        });
+        // wait for result. If anything goes wrong it will fail to fetch
+        const result = await response.json();
+        const catData = result.data[category]
+        console.log('Resetting category', category)
+	    activeSession.update(current => {
+	        // Create a new object with the updated array
+	        return {
+	            ...current,
+	            [category]: catData,
+	        };
+	    });
+
+	}
 	/**
 	 * Function to open question modal
 	 */
 	async function openQuestionModal(category) {
 		const currCatQlist = [...$activeSession[category]];
+
+		//reset if used up
+		if (currCatQlist.length === 0) {
+			resetCatList(category)
+		};
 		const qid = getRandomItem(currCatQlist);
 		const backendPort = window.api.getBackendPort();
+
+		const question_param = {
+			'category': category,
+			'qid': qid,
+			'path': currDir,
+		}
 		try {
-			const res = await fetch(`http://127.0.0.1:${backendPort}/question?category=${category}&qid=${qid}`);
+	        const res = await fetch(`http://127.0.0.1:${backendPort}/get_question`, {
+	        	method: 'POST',
+	        	headers: { 'Content-Type': 'application/json' },
+	        	body: JSON.stringify(question_param)
+	        });
 			const result = await res.json();
 			modalQuestion = result.data.question;
 			modalAnswer = result.data.answer;
@@ -658,7 +751,7 @@
 			console.log("Fetched Q&A:", result.data);
 			removeElement(category, qid)
 			// to remove question to avoid redundancy
-			console.log($activeSession)
+			//console.log($activeSession)
 			return 
 		} catch (err) {
 			console.error("Failed to fetch question:", err);
@@ -678,6 +771,7 @@
 
 		if (!isCorrect) {
 			console.log('Wrong!');
+			playerSwitch = true;
 			activePiece = (activePiece + 1) % players.length;
 			$constested = false;
 		} else {
@@ -703,6 +797,15 @@
 		openQuestionModal(cat);
 	}
 
+	async function handleSelectDir() {
+		selectedDir = await window.electronAPI.selectDir('export');
+		
+	}
+
+	function togglePlayerSwitch () {
+		playerSwitch = false;
+	}
+
 </script>
 
 <main class="min-h-screen bg-slate-900 text-white flex flex-col">
@@ -719,8 +822,6 @@
 			</a>
 		<div class="items-center justify-between">
 			<button on:click={() => showOverlayDice = true} class="absolute right-4 top-4 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">Roll Dice</button>
-
-			<button on:click={() => showCatOverlay = true} class="absolute right-4 top-24 h-16   duration-300 p-4 mt-4 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300">show cat</button>
 
 
 		<Overlay bind:show={showOverlayDice} >
@@ -754,6 +855,14 @@
 				{/each}
 			</div>
 			{/if}
+		<Overlay bind:show={showDataDir} >
+			<button class="duration-300 p-4 mt-4 bg-slate-800 border border-indigo-900 border-opacity-80 rounded-md hover:border-indigo-500 hover:bg-slate-700 transition-all duration-300 mt-4 ml-4 mr-4" on:click={() => handleSelectDir()}>
+				Select data directory
+			</button>
+		</Overlay>
+
+		<Overlay bind:show={playerSwitch} on:close={() => togglePlayerSwitch()}>
+			<h1> {players[activePiece]}'s turn!</h1>
 		</Overlay>
 
 		<Overlay bind:show={$gameWon} >
@@ -765,12 +874,15 @@
 			
 		</div>
 		<h1 class="pt-10  text-3xl font-bold">Trivial Compute!</h1>
-		<h2 class="mt-6 text-xl font-bold"> Active Player: {players[activePiece]} </h2>
+		<div class="flex flex-row">
+			<h2 class="mt-6 mb-2 text-xl font-bold" style="color: white;"> Now playing: </h2>
+			<h2 class="pl-2 mt-6 mb-2 text-xl font-bold" style="color: {playerTextColor[activePiece]};"> {players[activePiece]} </h2>
+		</div>
 	</section>
 
 	
 	<!-- Middle Part -->
-	<section class="flex flex-row items-center justify-center mt-6 mr-10 ml-10">
+	<section class="flex flex-row items-center justify-center mt-6 mr-10 ml-10 min-h-96">
 
 		<div
 			bind:this={containerRef}
@@ -779,7 +891,7 @@
 			}
 		>
 		    {#each tiles as tile}
-		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
+		        <Tile key={tile.key} active={tile.active} pieces={tile.pieces} tileColor={tile.tileColor} text={tile.text} category={tile.category} textColor={tile.textColor} possibleDest={possibleDestinations.includes(tile.key)} on:tileClick={handleTileClick}/>
 		    {/each}
 		    <div class="absolute"
 		    	style="left: {tileSize}px;
@@ -872,9 +984,4 @@
 			<QuestionModal bind:open={showQuestionModal} category={category} question={modalQuestion} answer={modalAnswer} on:answered={handleAnswered} />
 		</div>
 	</section>
-	<!-- <section>
-		Place holder for color annotation?
-	</section> -->
-
-
 </main>
