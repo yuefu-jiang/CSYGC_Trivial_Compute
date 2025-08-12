@@ -1,7 +1,7 @@
 # CSYGC Trivial Compute
 
 ## Description
-This is the course project from Johns Hopkins's EN.605.601.81.SU25 Foundations of Software Engineering. The template is ported from [this repo](https://github.com/feernandobraga/vitesvelctron). 
+This is the course project from Johns Hopkins's EN.605.601.81.SU25 Foundations of Software Engineering. The template is ported from [this repo](https://github.com/feernandobraga/vitesvelctron) with the addition of a local python server.
 
 ## 🧋 Technologies
 [Vite](https://vitejs.dev/): Vite is a lightning-fast build tool for web applications. It optimizes the development experience with near-instantaneous hot module replacement (HMR) and an efficient build process.
