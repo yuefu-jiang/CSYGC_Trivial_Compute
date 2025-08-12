@@ -35,6 +35,8 @@
     "vite": "^6.0.11"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "flowbite-svelte-blocks": "^2.1.0",
+    "flowbite-svelte-icons": "^2.2.1"
   }
 }

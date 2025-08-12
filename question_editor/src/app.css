@@ -3,6 +3,69 @@
 /* Optional: Flowbite styles */
 @import "flowbite";
 
+@source "../node_modules/simple-datatables/dist";
+@source "../node_modules/@flowbite-svelte-plugins/datatable/dist";
+
+.datatable-pagination .datatable-active a,
+.datatable-pagination .datatable-active a:focus,
+.datatable-pagination .datatable-active a:hover,
+.datatable-pagination .datatable-active button,
+.datatable-pagination .datatable-active button:focus,
+.datatable-pagination .datatable-active button:hover {
+  background-color: #0939a881 !important;
+  cursor: default;
+}
+
+/* dark-mode only (recommended) */
+/* :root.dark .datatable-table thead th,
+:root.dark .datatable-table tbody td,
+:root.dark .datatable-top,
+:root.dark .datatable-bottom,
+:root.dark .datatable-pagination {
+  @apply text-white;
+} */
+
+/* search input text + placeholder in dark */
+:root.dark .datatable-input { @apply text-white; }
+:root.dark .datatable-input::placeholder { @apply text-slate-300; }
+
+/* force white text (both header + body cells) */
+:root .datatable-table thead th,
+:root .datatable-table tbody td,
+:root .datatable-top,
+:root .datatable-bottom,
+:root .datatable-pagination {
+  color: #ccd0f7 !important;
+}
+
+/* Light mode table header */
+:root .datatable-table thead th {
+  background-color: #1e3a8a; /* Tailwind blue-900 */
+  color: white;
+}
+:root .datatable-input {
+  background-color: #1e293b; /* Tailwind slate-800 */
+  color: white;
+  border: 1px solid #475569; /* slate-600 */
+}
+
+:root .datatable-table tbody tr.selected {
+  background-color: #133890; /* Tailwind slate-800 */
+  color: white;
+  border: 1px solid #475569; /* slate-600 */
+}
+
+:root .datatable-selector{
+  background-color: #1e293b; /* Tailwind slate-800 */
+  color: white;
+  border: 1px solid #475569; /* slate-600 */
+}
+
+
+/* search input text + placeholder */
+:root .datatable-input { color: #fff !important; }
+:root .datatable-input::placeholder { color: #cbd5e1 !important; } /* slate-300 */
+
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

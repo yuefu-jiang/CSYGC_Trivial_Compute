@@ -22,6 +22,7 @@ class Server:
         self.app.add_url_rule("/init_questions", "init_questions", self.return_all_questions, methods=["POST"])
         self.app.add_url_rule("/replace_questions_file", "replace_questions_file", self.replace_questions_file, methods=["POST"])
         self.app.add_url_rule("/add_to_questions_file", "add_to_questions_file", self.add_to_questions_file, methods=["POST"])
+        self.app.add_url_rule("/questions/<category>/<qid>", "delete_question", self.delete_question, methods=["DELETE"])
 
         logging.basicConfig(
             level=logging.DEBUG,
@@ -162,6 +163,31 @@ class Server:
         except Exception as e:
             self.app.logger.error(f"Error reading questions file: {e}")
             return jsonify({'error': 'Failed to read questions file'}), 500
+        
+    def delete_question(self, category, qid):
+        try:
+            if not QUESTION_FILE.exists():
+                return jsonify({"error": "Questions file not found"}), 404
+
+            with open(QUESTION_FILE, "r") as f:
+                data = json.load(f)
+
+            cat = data.get(category)
+            if not cat or qid not in cat:
+                return jsonify({"error": "Question not found"}), 404
+
+            del cat[qid]
+            if not cat:
+                del data[category]
+
+            with open(QUESTION_FILE, "w") as f:
+                json.dump(data, f, indent=2)
+
+            return jsonify({"status": "deleted", "category": category, "qid": qid}), 200
+        except Exception:
+            self.app.logger.exception("Error deleting question")
+            return jsonify({"error": "Failed to delete question"}), 500
+
 
 # Start server
 if __name__ == "__main__":
