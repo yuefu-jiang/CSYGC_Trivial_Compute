@@ -1,5 +1,7 @@
 # CSYGC Trivial Compute
 
+[1.0.1 zip release for windows](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/yjian117_jh_edu/Eb9SaXAvRKFBgSu8vDOiDsUB7PMW9R4O6vBWwt79yq-HEw?e=Ljmif1)
+
 ## Description
 This is the course project from Johns Hopkins's EN.605.601.81.SU25 Foundations of Software Engineering. The template is ported from [this repo](https://github.com/feernandobraga/vitesvelctron) with the addition of a local python server.
 
